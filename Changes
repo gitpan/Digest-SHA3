@@ -1,0 +1,4 @@
+Revision history for Perl extension Digest::SHA3.
+
+0.01  Tue Oct 23 08:50:30 MST 2012
+	- original version: adapted from Digest::SHA version 5.72
