@@ -4,8 +4,8 @@
 	##
 	## Copyright (C) 2012 Mark Shelor, All Rights Reserved
 	##
-	## Version: 0.02
-	## Thu Oct 25 19:18:58 MST 2012
+	## Version: 0.03
+	## Mon Oct 29 04:01:06 MST 2012
 
 	## sha3sum SYNOPSIS adapted from GNU Coreutils sha1sum.
 	## Add an "-a" option for algorithm selection, a "-p"
@@ -42,7 +42,7 @@ sha3sum - Print or Check SHA-3 Checksums
    -h, --help        display this help and exit
    -v, --version     output version information and exit
 
- The sums are computed as described in the Keccak Reference 3.0.
+ The sums are computed as described in the Keccak SHA-3 submission.
  When checking, the input should be a former output of this program.
  The default mode is to print a line with checksum, a character
  indicating type (`*' for binary, ` ' for text, `?' for portable,
@@ -65,10 +65,6 @@ Or, if you want to use SHA3-256 instead of the default SHA3-224,
 simply say:
 
 	perl -e "print qq(abc)" | sha3sum -a 256
-
-Since I<sha3sum> mimics the behavior of the combined GNU I<sha1sum>,
-I<sha224sum>, I<sha256sum>, I<sha384sum>, and I<sha512sum> programs,
-you can install this script as a convenient drop-in replacement.
 
 Unlike many other digest computation programs, I<sha3sum> implements
 the full SHA-3 standard by allowing partial-byte inputs, which can
@@ -93,7 +89,7 @@ use strict;
 use Fcntl;
 use Getopt::Long;
 
-my $VERSION = "0.02";
+my $VERSION = "0.03";
 
 
 	## Try to use Digest::SHA-3.  If not installed, use the slower

@@ -5,8 +5,8 @@
  *
  * Copyright (C) 2012 Mark Shelor, All Rights Reserved
  *
- * Version: 0.02
- * Thu Oct 25 19:18:58 MST 2012
+ * Version: 0.03
+ * Mon Oct 29 04:01:06 MST 2012
  *
  */
 
@@ -46,17 +46,17 @@
 	#define SHA64_CONST(c)	(SHA64) c
 #endif
 
-#define SHA_new			New
-#define SHA_newz		Newz
-#define SHA_free		Safefree
-#define SHA_FILE		PerlIO
-#define SHA_stdin()		PerlIO_stdin()
-#define SHA_stdout()		PerlIO_stdout()
-#define SHA_open		PerlIO_open
-#define SHA_close		PerlIO_close
-#define SHA_fprintf		PerlIO_printf
-#define SHA_feof		PerlIO_eof
-#define SHA_getc		PerlIO_getc
+#define SHA3_new		New
+#define SHA3_newz		Newz
+#define SHA3_free		Safefree
+#define SHA3_FILE		PerlIO
+#define SHA3_stdin()		PerlIO_stdin()
+#define SHA3_stdout()		PerlIO_stdout()
+#define SHA3_open		PerlIO_open
+#define SHA3_close		PerlIO_close
+#define SHA3_fprintf		PerlIO_printf
+#define SHA3_feof		PerlIO_eof
+#define SHA3_getc		PerlIO_getc
 
 #define SHA3_0		0
 #define SHA3_224	224
@@ -92,10 +92,6 @@ typedef struct SHA3 {
 	char hex[SHA3_MAX_HEX_LEN+1];
 	char base64[SHA3_MAX_BASE64_LEN+1];
 } SHA3;
-
-#define SHA3_FMT_RAW 1
-#define SHA3_FMT_HEX 2
-#define SHA3_FMT_BASE64 3
 
 #define _SHA3_STATE	SHA3 *s
 #define _SHA3_ALG	int alg

@@ -5,8 +5,8 @@
  *
  * Copyright (C) 2012 Mark Shelor, All Rights Reserved
  *
- * Version: 0.02
- * Thu Oct 25 19:18:58 MST 2012
+ * Version: 0.03
+ * Mon Oct 29 04:01:06 MST 2012
  *
  */
 
@@ -14,24 +14,20 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-#include <ctype.h>
 #include "sha3.h"
 
 #define UCHR	unsigned char		/* useful abbreviations */
 #define UINT	unsigned int
 #define ULNG	unsigned long
-#define VP	void *
 #define W64	SHA64
 #define C64	SHA64_CONST
 #define SR64	SHA64_SHR
 #define SL64	SHA64_SHL
 
-#define A5(v)	{v, v, v, v, v}
-
 /* mem2word: convert little-endian to 64-bit value */
-static W64 mem2word(unsigned char *mem)
+static W64 mem2word(UCHR *mem)
 {
-	unsigned char *p;
+	UCHR *p;
 	W64 w = 0;
 
 	for (p = mem+7; p >= mem;)
@@ -40,10 +36,10 @@ static W64 mem2word(unsigned char *mem)
 }
 
 /* word2mem: write 64-bit value in little-endian order */
-static unsigned char *word2mem(W64 w, unsigned char *mem)
+static UCHR *word2mem(W64 w, UCHR *mem)
 {
 	int i;
-	unsigned char *p = mem;
+	UCHR *p = mem;
 
 	for (i = 0; i < 8; i++, w >>= 8)
 		*p++ = w & 0xff;
@@ -72,26 +68,95 @@ static int R[][5] = {		/* Keccak rotation offsets */
 /* keccak_f: apply KECCAK-f[1600] permutation for 24 rounds */
 static void keccak_f(W64 A[][5])
 {
-	int i, x, y;
+	int i;
 	for (i = 0; i < 24; i++) {
-		W64 B[5][5] = A5(A5(0));
-		W64 C[5] = A5(0);
-		W64 D[5] = A5(0);
-		for (x = 0; x < 5; x++)
-			C[x] = A[x][0]^A[x][1]^A[x][2]^A[x][3]^A[x][4];
-		for (x = 0; x < 5; x++)
-			D[x] = C[(x+4)%5] ^ rot(C[(x+1)%5], 1);
-		for (x = 0; x < 5; x++)
-			for (y = 0; y < 5; y++)
-				A[x][y] = A[x][y] ^ D[x];
-		for (x = 0; x < 5; x++)
-			for (y = 0; y < 5; y++)
-				B[y][(2*x+3*y)%5] = rot(A[x][y], R[x][y]);
-		for (x = 0; x < 5; x++)
-			for (y = 0; y < 5; y++)
-				A[x][y] = B[x][y] ^ ((~B[(x+1)%5][y]) &
-							B[(x+2)%5][y]);
-		A[0][0] = A[0][0] ^ RC[i];
+		W64 B[5][5], C[5], D[5];
+		C[0] = A[0][0]^A[0][1]^A[0][2]^A[0][3]^A[0][4];
+		C[1] = A[1][0]^A[1][1]^A[1][2]^A[1][3]^A[1][4];
+		C[2] = A[2][0]^A[2][1]^A[2][2]^A[2][3]^A[2][4];
+		C[3] = A[3][0]^A[3][1]^A[3][2]^A[3][3]^A[3][4];
+		C[4] = A[4][0]^A[4][1]^A[4][2]^A[4][3]^A[4][4];
+		D[0] = C[4] ^ rot(C[1], 1);
+		D[1] = C[0] ^ rot(C[2], 1);
+		D[2] = C[1] ^ rot(C[3], 1);
+		D[3] = C[2] ^ rot(C[4], 1);
+		D[4] = C[3] ^ rot(C[0], 1);
+		A[0][0] ^= D[0];
+		A[0][1] ^= D[0];
+		A[0][2] ^= D[0];
+		A[0][3] ^= D[0];
+		A[0][4] ^= D[0];
+		A[1][0] ^= D[1];
+		A[1][1] ^= D[1];
+		A[1][2] ^= D[1];
+		A[1][3] ^= D[1];
+		A[1][4] ^= D[1];
+		A[2][0] ^= D[2];
+		A[2][1] ^= D[2];
+		A[2][2] ^= D[2];
+		A[2][3] ^= D[2];
+		A[2][4] ^= D[2];
+		A[3][0] ^= D[3];
+		A[3][1] ^= D[3];
+		A[3][2] ^= D[3];
+		A[3][3] ^= D[3];
+		A[3][4] ^= D[3];
+		A[4][0] ^= D[4];
+		A[4][1] ^= D[4];
+		A[4][2] ^= D[4];
+		A[4][3] ^= D[4];
+		A[4][4] ^= D[4];
+		B[0][0] = rot(A[0][0], R[0][0]);
+		B[1][3] = rot(A[0][1], R[0][1]);
+		B[2][1] = rot(A[0][2], R[0][2]);
+		B[3][4] = rot(A[0][3], R[0][3]);
+		B[4][2] = rot(A[0][4], R[0][4]);
+		B[0][2] = rot(A[1][0], R[1][0]);
+		B[1][0] = rot(A[1][1], R[1][1]);
+		B[2][3] = rot(A[1][2], R[1][2]);
+		B[3][1] = rot(A[1][3], R[1][3]);
+		B[4][4] = rot(A[1][4], R[1][4]);
+		B[0][4] = rot(A[2][0], R[2][0]);
+		B[1][2] = rot(A[2][1], R[2][1]);
+		B[2][0] = rot(A[2][2], R[2][2]);
+		B[3][3] = rot(A[2][3], R[2][3]);
+		B[4][1] = rot(A[2][4], R[2][4]);
+		B[0][1] = rot(A[3][0], R[3][0]);
+		B[1][4] = rot(A[3][1], R[3][1]);
+		B[2][2] = rot(A[3][2], R[3][2]);
+		B[3][0] = rot(A[3][3], R[3][3]);
+		B[4][3] = rot(A[3][4], R[3][4]);
+		B[0][3] = rot(A[4][0], R[4][0]);
+		B[1][1] = rot(A[4][1], R[4][1]);
+		B[2][4] = rot(A[4][2], R[4][2]);
+		B[3][2] = rot(A[4][3], R[4][3]);
+		B[4][0] = rot(A[4][4], R[4][4]);
+		A[0][0] = B[0][0] ^ (~B[1][0] & B[2][0]);
+		A[0][1] = B[0][1] ^ (~B[1][1] & B[2][1]);
+		A[0][2] = B[0][2] ^ (~B[1][2] & B[2][2]);
+		A[0][3] = B[0][3] ^ (~B[1][3] & B[2][3]);
+		A[0][4] = B[0][4] ^ (~B[1][4] & B[2][4]);
+		A[1][0] = B[1][0] ^ (~B[2][0] & B[3][0]);
+		A[1][1] = B[1][1] ^ (~B[2][1] & B[3][1]);
+		A[1][2] = B[1][2] ^ (~B[2][2] & B[3][2]);
+		A[1][3] = B[1][3] ^ (~B[2][3] & B[3][3]);
+		A[1][4] = B[1][4] ^ (~B[2][4] & B[3][4]);
+		A[2][0] = B[2][0] ^ (~B[3][0] & B[4][0]);
+		A[2][1] = B[2][1] ^ (~B[3][1] & B[4][1]);
+		A[2][2] = B[2][2] ^ (~B[3][2] & B[4][2]);
+		A[2][3] = B[2][3] ^ (~B[3][3] & B[4][3]);
+		A[2][4] = B[2][4] ^ (~B[3][4] & B[4][4]);
+		A[3][0] = B[3][0] ^ (~B[4][0] & B[0][0]);
+		A[3][1] = B[3][1] ^ (~B[4][1] & B[0][1]);
+		A[3][2] = B[3][2] ^ (~B[4][2] & B[0][2]);
+		A[3][3] = B[3][3] ^ (~B[4][3] & B[0][3]);
+		A[3][4] = B[3][4] ^ (~B[4][4] & B[0][4]);
+		A[4][0] = B[4][0] ^ (~B[0][0] & B[1][0]);
+		A[4][1] = B[4][1] ^ (~B[0][1] & B[1][1]);
+		A[4][2] = B[4][2] ^ (~B[0][2] & B[1][2]);
+		A[4][3] = B[4][3] ^ (~B[0][3] & B[1][3]);
+		A[4][4] = B[4][4] ^ (~B[0][4] & B[1][4]);
+		A[0][0] ^= RC[i];
 	}
 }
 
@@ -99,14 +164,13 @@ static void keccak_f(W64 A[][5])
 static void sha3(SHA3 *s, UCHR *block)
 {
 	int i, x, y;
-	int N = s->blocksize/64;
-	W64 P0[5][5] = A5(A5(0));
+	W64 P0[5][5];
 
-	for (i = 0; i < N; i++)
+	for (i = 0; i < s->blocksize/64; i++)
 		P0[i%5][i/5] = mem2word(block+i*8);
 	for (x = 0; x < 5; x++)
 		for (y = 0; y < 5; y++) {
-			if (x + y*5 >= N)
+			if (x + y*5 >= s->blocksize/64)
 				break;
 			s->S[x][y] = s->S[x][y] ^ P0[x][y];
 		}
@@ -117,25 +181,21 @@ static void sha3(SHA3 *s, UCHR *block)
 static void digcpy(SHA3 *s)
 {
 	int x, y;
-	int N = s->blocksize/64;
 	UCHR *Z = s->digest;
 	int outbits = s->digestlen*8;
 
 	while (outbits > 0) {
 		for (y = 0; y < 5; y++)
-			for (x = 0; x < 5; x++) {
-				if (x + y*5 >= N)
+			for (x = 0; x < 5; x++, Z += 8) {
+				if (x + y*5 >= s->blocksize/64)
 					break;
 				word2mem(s->S[x][y], Z);
-				Z += 8;
 			}
 		if ((outbits -= s->blocksize) > 0)
 			keccak_f(s->S);
 	}
 }
 
-#define SETBIT(s, pos)	s[(pos) >> 3] |=  (0x01 << (7 - (pos) % 8))
-#define CLRBIT(s, pos)	s[(pos) >> 3] &= ~(0x01 << (7 - (pos) % 8))
 #define NBYTES(nbits)   (((nbits) + 7) >> 3)
 #define HEXLEN(nbytes)	((nbytes) << 1)
 #define B64LEN(nbytes)	(((nbytes) % 3 == 0) ? ((nbytes) / 3) * 4 \
@@ -167,7 +227,7 @@ SHA3 *shaopen(int alg)
 	if (alg != SHA3_0 && alg != SHA3_224 && alg != SHA3_256 &&
 		alg != SHA3_384    && alg != SHA3_512)
 		return(NULL);
-	SHA_newz(0, s, 1, SHA3);
+	SHA3_newz(0, s, 1, SHA3);
 	if (s == NULL)
 		return(NULL);
 	s->alg = alg;
@@ -267,7 +327,7 @@ ULNG shawrite(UCHR *bitstr, ULNG bitcnt, SHA3 *s)
 /* shafinish: pads remaining block(s) and computes final digest state */
 void shafinish(SHA3 *s)
 {
-	UCHR b;
+	UCHR b;		/* partial byte */
 
 	if (s->blockcnt % 8 == 0) {
 		s->block[s->blockcnt/8] = 0x01, s->blockcnt += 8;
@@ -374,7 +434,7 @@ SHA3 *shadup(SHA3 *s)
 {
 	SHA3 *p;
 
-	SHA_new(0, p, 1, SHA3);
+	SHA3_new(0, p, 1, SHA3);
 	if (p == NULL)
 		return(NULL);
 	memcpy(p, s, sizeof(SHA3));
@@ -386,7 +446,7 @@ int shaclose(SHA3 *s)
 {
 	if (s != NULL) {
 		memset(s, 0, sizeof(SHA3));
-		SHA_free(s);
+		SHA3_free(s);
 	}
 	return(0);
 }

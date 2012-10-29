@@ -1,4 +1,9 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.03  Mon Oct 29 04:01:06 MST 2012
+	- attained a 2.5x performance increase through loop unrolling
+		-- code is still easy to follow
+			-- clearly traceable to Keccak pseudo code
+
 0.02  Thu Oct 25 19:18:58 MST 2012
 	- original version: adapted from Digest::SHA version 5.72
