@@ -1,5 +1,11 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.04  Sun Nov 11 19:20:06 MST 2012
+	- enhanced performance
+		-- typically 10-15% faster than 0.03
+		-- code is still easy to read and modify
+	- filled in a few documentation omissions
+
 0.03  Mon Oct 29 04:01:06 MST 2012
 	- attained a 2.5x performance increase through loop unrolling
 		-- code is still easy to follow

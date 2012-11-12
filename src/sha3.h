@@ -5,14 +5,15 @@
  *
  * Copyright (C) 2012 Mark Shelor, All Rights Reserved
  *
- * Version: 0.03
- * Mon Oct 29 04:01:06 MST 2012
+ * Version: 0.04
+ * Sun Nov 11 19:20:06 MST 2012
  *
  */
 
 #ifndef _INCLUDE_SHA3_H_
 #define _INCLUDE_SHA3_H_
 
+#include <string.h>
 #include <limits.h>
 
 #define SHA64_SHR(x, n)	((x) >> (n))
@@ -44,6 +45,20 @@
 #elif defined(_MSC_VER)					/* Microsoft C */
 	#define SHA64	unsigned __int64
 	#define SHA64_CONST(c)	(SHA64) c
+#endif
+
+#if defined(BYTEORDER) && ((BYTEORDER==0x1234) || (BYTEORDER==0x12345678))
+	#if defined(SHA64_ALIGNED)
+		#define MEM2WORD(W, m)	memcpy(W, m, 8)
+	#endif
+#endif
+
+#if !defined(MEM2WORD)
+	#define MEM2WORD(W, m) *(W) = 				\
+		(SHA64) m[0] << 0  | (SHA64) m[1] << 8  |	\
+		(SHA64) m[2] << 16 | (SHA64) m[3] << 24 |	\
+		(SHA64) m[4] << 32 | (SHA64) m[5] << 40 |	\
+		(SHA64) m[6] << 48 | (SHA64) m[7] << 56
 #endif
 
 #define SHA3_new		New

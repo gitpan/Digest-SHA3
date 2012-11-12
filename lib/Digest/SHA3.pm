@@ -7,7 +7,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 use Fcntl;
 use integer;
 
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 require Exporter;
 require DynaLoader;
@@ -267,11 +267,11 @@ of the digest until it is:
 
 To illustrate, I<sha3_256_base64("abc")> is computed to be
 
-	XXX
+	TgNleupFqU/H1HuoJsjWZ8DR5uM6ZKA27ET1j6EtbEU
 
-which has a length of XXX.  So, the properly padded version is
+which has a length of 43.  So, the properly padded version is
 
-	XXX
+	TgNleupFqU/H1HuoJsjWZ8DR5uM6ZKA27ET1j6EtbEU=
 
 =head1 EXPORT
 
