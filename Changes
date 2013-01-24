@@ -1,5 +1,15 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.05  Thu Jan 24 04:54:14 MST 2013
+	- accommodated Unicode string input
+		-- by using SvPVbyte instead of SvPV in SHA3.xs
+			-- provided workaround for Perl 5.6
+		-- added new test script t/unicode.t
+	- provided documentation to describe Unicode handling
+	- obtained slight speedup on Intel/gcc
+		-- by setting -O1 and -fomit-frame-pointer
+	- adopted (from Digest::SHA) workaround for DEC compiler bug
+
 0.04  Sun Nov 11 19:20:06 MST 2012
 	- enhanced performance
 		-- typically 10-15% faster than 0.03

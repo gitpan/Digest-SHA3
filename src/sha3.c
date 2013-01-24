@@ -3,10 +3,10 @@
  *
  * Ref: http://keccak.noekeon.org/specs_summary.html
  *
- * Copyright (C) 2012 Mark Shelor, All Rights Reserved
+ * Copyright (C) 2012-2013 Mark Shelor, All Rights Reserved
  *
- * Version: 0.04
- * Sun Nov 11 19:20:06 MST 2012
+ * Version: 0.05
+ * Thu Jan 24 04:54:14 MST 2013
  *
  */
 
@@ -25,14 +25,13 @@
 #define SL64	SHA64_SHL
 
 /* word2mem: write 64-bit value in little-endian order */
-static UCHR *word2mem(W64 w, UCHR *mem)
+static void word2mem(UCHR *mem, W64 w)
 {
 	int i;
 	UCHR *p = mem;
 
 	for (i = 0; i < 8; i++, w >>= 8)
 		*p++ = w & 0xff;
-	return(mem);
 }
 
 static W64 RC[] = {	/* Keccak round constants */
@@ -152,7 +151,7 @@ static void keccak_f(W64 A[][5])
 /* sha3: update SHA3 state with one block of data */
 static void sha3(SHA3 *s, UCHR *block)
 {
-	int i, x, y;
+	unsigned int i, x, y;
 	W64 P0[5][5];
 
 	for (i = 0; i < s->blocksize/64; i++, block += 8)
@@ -169,7 +168,7 @@ static void sha3(SHA3 *s, UCHR *block)
 /* digcpy: write final SHA3 state to digest buffer */
 static void digcpy(SHA3 *s)
 {
-	int x, y;
+	unsigned int x, y;
 	UCHR *Z = s->digest;
 	int outbits = s->digestlen*8;
 
@@ -178,7 +177,7 @@ static void digcpy(SHA3 *s)
 			for (x = 0; x < 5; x++, Z += 8) {
 				if (x + y*5 >= s->blocksize/64)
 					break;
-				word2mem(s->S[x][y], Z);
+				word2mem(Z, s->S[x][y]);
 			}
 		if ((outbits -= s->blocksize) > 0)
 			keccak_f(s->S);
@@ -211,7 +210,7 @@ void sharewind(SHA3 *s)
 /* shaopen: creates a new digest object */
 SHA3 *shaopen(int alg)
 {
-	SHA3 *s;
+	SHA3 *s = NULL;
 
 	if (alg != SHA3_0 && alg != SHA3_224 && alg != SHA3_256 &&
 		alg != SHA3_384 && alg != SHA3_512)
@@ -395,7 +394,7 @@ char *shabase64(SHA3 *s)
 
 	digcpy(s);
 	s->base64[0] = '\0';
-	if (B64LEN(s->digestlen) >= sizeof(s->base64))
+	if (B64LEN((size_t) s->digestlen) >= sizeof(s->base64))
 		return(s->base64);
 	for (n = s->digestlen, q = s->digest; n > 3; n -= 3, q += 3) {
 		encbase64(q, 3, out);

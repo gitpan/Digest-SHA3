@@ -2,8 +2,34 @@ require 5.003000;
 
 use strict;
 use ExtUtils::MakeMaker;
+use Getopt::Std;
+use Config qw(%Config);
 
 my $PM = 'lib/Digest/SHA3.pm';
+
+my %opts;
+getopts('w', \%opts);
+
+my @extra = ();
+
+	# Workaround for DEC compiler bug, adapted from Digest::MD5
+
+if ($^O eq 'VMS') {
+	if (defined($Config{ccname})) {
+		if (grep(/VMS_VAX/, @INC) && ($Config{ccname} eq 'DEC')) {
+			# VAX compiler optimizer even up to v6.4 gets stuck
+			push(@extra, OPTIMIZE => "/Optimize=(NODISJOINT)");
+		}
+	}
+}
+
+	# Enhance performance on Intel when using gcc
+
+if ($Config{archname} =~ /^i[3456]86/ && $Config{ccname} eq 'gcc') {
+	push(@extra, OPTIMIZE => '-O1 -fomit-frame-pointer');
+}
+
+push(@extra, CCFLAGS => '-W -Wall ' . $Config{ccflags}) if $opts{'w'};
 
 my %att = (
 	'NAME'		=> 'Digest::SHA3',
@@ -11,6 +37,7 @@ my %att = (
 	'LIBS'		=> [''],
 	'INC'		=> '-I.',
 	'EXE_FILES'	=> [ 'sha3sum' ],
+	@extra,
 );
 
 my $MMversion = $ExtUtils::MakeMaker::VERSION || 0;

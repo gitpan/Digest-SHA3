@@ -21,4 +21,5 @@ t/sha3-224.t
 t/sha3-256.t
 t/sha3-384.t
 t/sha3-512.t
+t/unicode.t
 typemap

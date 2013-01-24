@@ -2,10 +2,10 @@
 
 	## sha3sum: filter for computing SHA-3 digests (ref. shasum)
 	##
-	## Copyright (C) 2012 Mark Shelor, All Rights Reserved
+	## Copyright (C) 2012-2013 Mark Shelor, All Rights Reserved
 	##
-	## Version: 0.04
-	## Sun Nov 11 19:20:06 MST 2012
+	## Version: 0.05
+	## Thu Jan 24 04:54:14 MST 2013
 
 	## sha3sum SYNOPSIS adapted from GNU Coreutils sha1sum.
 	## Add an "-a" option for algorithm selection, a "-p"
@@ -75,7 +75,7 @@ computes the SHA3-384 digest of the 7-bit message I<0001100>:
 
 =head1 AUTHOR
 
-Copyright (c) 2012 Mark Shelor <mshelor@cpan.org>.
+Copyright (c) 2012-2013 Mark Shelor <mshelor@cpan.org>.
 
 =head1 SEE ALSO
 
@@ -89,7 +89,7 @@ use strict;
 use Fcntl;
 use Getopt::Long;
 
-my $VERSION = "0.04";
+my $VERSION = "0.05";
 
 
 	## Try to use Digest::SHA-3.  If not installed, use the slower

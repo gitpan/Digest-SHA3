@@ -7,7 +7,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 use Fcntl;
 use integer;
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 require Exporter;
 require DynaLoader;
@@ -41,8 +41,8 @@ sub new {
 			sharewind($$class);
 			return($class);
 		}
-		shaclose($$class) if $$class;
-		$$class = shaopen($alg) || return;
+		if ($$class) { shaclose($$class); $$class = undef }
+		return unless $$class = shaopen($alg);
 		return($class);
 	}
 	$alg = 224 unless defined $alg;
@@ -249,6 +249,35 @@ digest:
 Note that for larger bit-strings, it's more efficient to use the
 two-argument version I<add_bits($data, $nbits)>, where I<$data> is
 in the customary packed binary format used for Perl strings.
+
+=head1 UNICODE AND SIDE EFFECTS
+
+Perl supports Unicode strings as of version 5.6.  Such strings may
+contain wide characters, namely, characters whose ordinal values are
+greater than 255.  This can cause problems for digest algorithms such
+as SHA-3 that are specified to operate on sequences of bytes.
+
+The rule by which Digest::SHA3 handles a Unicode string is easy to
+state, but potentially confusing to grasp: the string is interpreted
+as a sequence of bytes, where each byte is equal to the ordinal value
+(viz. code point) of its corresponding Unicode character.  That way,
+the Unicode version of the string 'abc' has exactly the same digest
+value as the ordinary string 'abc'.
+
+Since a wide character does not fit into a byte, the Digest::SHA3 routines
+croak if they encounter one.  Whereas if a Unicode string contains no
+wide characters, the module accepts it quite happily.  The following
+code illustrates the two cases:
+
+	$str1 = pack('U*', (0..255));
+	print sha3_224_hex($str1);		# ok
+
+	$str2 = pack('U*', (0..256));
+	print sha3_224_hex($str2);		# croaks
+
+Be aware that the digest routines silently convert UTF-8 input into its
+equivalent byte sequence in the native encoding (cf. utf8::downgrade).
+This side effect only influences the way Perl stores data internally.
 
 =head1 PADDING OF BASE64 DIGESTS
 
@@ -517,7 +546,7 @@ for being on the ball, as usual.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012 Mark Shelor
+Copyright (C) 2012-2013 Mark Shelor
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

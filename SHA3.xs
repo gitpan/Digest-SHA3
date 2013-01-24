@@ -2,6 +2,16 @@
 #include "perl.h"
 #include "XSUB.h"
 
+#ifdef SvPVbyte
+	#if PERL_REVISION == 5 && PERL_VERSION < 8
+		#undef SvPVbyte
+		#define SvPVbyte(sv, lp) \
+			(sv_utf8_downgrade((sv), 0), SvPV((sv), (lp)))
+	#endif
+#else
+	#define SvPVbyte SvPV
+#endif
+
 #include "src/sha3.c"
 
 static int ix2alg[] =
@@ -69,7 +79,7 @@ PPCODE:
 	if ((state = shaopen(ix2alg[ix])) == NULL)
 		XSRETURN_UNDEF;
 	for (i = 0; i < items; i++) {
-		data = (unsigned char *) (SvPV(ST(i), len));
+		data = (unsigned char *) (SvPVbyte(ST(i), len));
 		while (len > MAX_WRITE_SIZE) {
 			shawrite(data, MAX_WRITE_SIZE << 3, state);
 			data += MAX_WRITE_SIZE;
@@ -117,7 +127,7 @@ PREINIT:
 PPCODE:
 	state = INT2PTR(SHA3 *, SvIV(SvRV(SvRV(self))));
 	for (i = 1; i < items; i++) {
-		data = (unsigned char *) (SvPV(ST(i), len));
+		data = (unsigned char *) (SvPVbyte(ST(i), len));
 		while (len > MAX_WRITE_SIZE) {
 			shawrite(data, MAX_WRITE_SIZE << 3, state);
 			data += MAX_WRITE_SIZE;
