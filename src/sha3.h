@@ -5,8 +5,8 @@
  *
  * Copyright (C) 2012-2013 Mark Shelor, All Rights Reserved
  *
- * Version: 0.05
- * Thu Jan 24 04:54:14 MST 2013
+ * Version: 0.06
+ * Mon Mar  4 08:12:04 MST 2013
  *
  */
 
@@ -61,17 +61,9 @@
 		(SHA64) m[6] << 48 | (SHA64) m[7] << 56
 #endif
 
-#define SHA3_new		New
-#define SHA3_newz		Newz
-#define SHA3_free		Safefree
-#define SHA3_FILE		PerlIO
-#define SHA3_stdin()		PerlIO_stdin()
-#define SHA3_stdout()		PerlIO_stdout()
-#define SHA3_open		PerlIO_open
-#define SHA3_close		PerlIO_close
-#define SHA3_fprintf		PerlIO_printf
-#define SHA3_feof		PerlIO_eof
-#define SHA3_getc		PerlIO_getc
+#define SHA3_new	New
+#define SHA3_newz	Newz
+#define SHA3_free	Safefree
 
 #define SHA3_0		0
 #define SHA3_224	224
@@ -107,22 +99,5 @@ typedef struct SHA3 {
 	char hex[SHA3_MAX_HEX_LEN+1];
 	char base64[SHA3_MAX_BASE64_LEN+1];
 } SHA3;
-
-#define _SHA3_STATE	SHA3 *s
-#define _SHA3_ALG	int alg
-#define _SHA3_DATA	unsigned char *bitstr, unsigned long bitcnt
-#define _SHA3_FNAME	char *filename
-
-SHA3		*shaopen	(_SHA3_ALG);
-unsigned long	 shawrite	(_SHA3_DATA, _SHA3_STATE);
-void		 shafinish	(_SHA3_STATE);
-void		 sharewind	(_SHA3_STATE);
-unsigned char	*shadigest	(_SHA3_STATE);
-char		*shahex		(_SHA3_STATE);
-char		*shabase64	(_SHA3_STATE);
-int		 shadsize	(_SHA3_STATE);
-int		 shaalg		(_SHA3_STATE);
-SHA3		*shadup		(_SHA3_STATE);
-int		 shaclose	(_SHA3_STATE);
 
 #endif	/* _INCLUDE_SHA3_H_ */

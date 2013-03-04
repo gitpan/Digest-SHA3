@@ -5,8 +5,8 @@
  *
  * Copyright (C) 2012-2013 Mark Shelor, All Rights Reserved
  *
- * Version: 0.05
- * Thu Jan 24 04:54:14 MST 2013
+ * Version: 0.06
+ * Mon Mar  4 08:12:04 MST 2013
  *
  */
 
@@ -198,7 +198,7 @@ static void digcpy(SHA3 *s)
 	} while (0)
 
 /* sharewind: re-initializes the digest object */
-void sharewind(SHA3 *s)
+static void sharewind(SHA3 *s)
 {
 	if      (s->alg == SHA3_0)   SHA3_INIT(0);
 	else if (s->alg == SHA3_224) SHA3_INIT(224);
@@ -208,7 +208,7 @@ void sharewind(SHA3 *s)
 }
 
 /* shaopen: creates a new digest object */
-SHA3 *shaopen(int alg)
+static SHA3 *shaopen(int alg)
 {
 	SHA3 *s = NULL;
 
@@ -221,6 +221,16 @@ SHA3 *shaopen(int alg)
 	s->alg = alg;
 	sharewind(s);
 	return(s);
+}
+
+/* shaclose: de-allocates digest object */
+static int shaclose(SHA3 *s)
+{
+	if (s != NULL) {
+		memset(s, 0, sizeof(SHA3));
+		SHA3_free(s);
+	}
+	return(0);
 }
 
 /* shadirect: updates state directly (w/o going through s->block) */
@@ -300,7 +310,7 @@ static ULNG shabits(UCHR *bitstr, ULNG bitcnt, SHA3 *s)
 }
 
 /* shawrite: triggers a state update using data in bitstr/bitcnt */
-ULNG shawrite(UCHR *bitstr, ULNG bitcnt, SHA3 *s)
+static ULNG shawrite(UCHR *bitstr, ULNG bitcnt, SHA3 *s)
 {
 	if (bitcnt < 1)
 		return(0);
@@ -313,7 +323,7 @@ ULNG shawrite(UCHR *bitstr, ULNG bitcnt, SHA3 *s)
 }
 
 /* shafinish: pads remaining block(s) and computes final digest state */
-void shafinish(SHA3 *s)
+static void shafinish(SHA3 *s)
 {
 	UCHR b;		/* partial byte */
 
@@ -345,14 +355,14 @@ void shafinish(SHA3 *s)
 }
 
 /* shadigest: returns pointer to current digest (binary) */
-UCHR *shadigest(SHA3 *s)
+static UCHR *shadigest(SHA3 *s)
 {
 	digcpy(s);
 	return(s->digest);
 }
 
 /* shahex: returns pointer to current digest (hexadecimal) */
-char *shahex(SHA3 *s)
+static char *shahex(SHA3 *s)
 {
 	int i;
 
@@ -386,7 +396,7 @@ static void encbase64(UCHR *in, int n, char *out)
 }
 
 /* shabase64: returns pointer to current digest (Base 64) */
-char *shabase64(SHA3 *s)
+static char *shabase64(SHA3 *s)
 {
 	int n;
 	UCHR *q;
@@ -406,19 +416,19 @@ char *shabase64(SHA3 *s)
 }
 
 /* shadsize: returns length of digest in bytes */
-int shadsize(SHA3 *s)
+static int shadsize(SHA3 *s)
 {
 	return(s->digestlen);
 }
 
 /* shaalg: returns which SHA-3 algorithm is being used */
-int shaalg(SHA3 *s)
+static int shaalg(SHA3 *s)
 {
 	return(s->alg);
 }
 
 /* shadup: duplicates current digest object */
-SHA3 *shadup(SHA3 *s)
+static SHA3 *shadup(SHA3 *s)
 {
 	SHA3 *p;
 
@@ -427,14 +437,4 @@ SHA3 *shadup(SHA3 *s)
 		return(NULL);
 	memcpy(p, s, sizeof(SHA3));
 	return(p);
-}
-
-/* shaclose: de-allocates digest object */
-int shaclose(SHA3 *s)
-{
-	if (s != NULL) {
-		memset(s, 0, sizeof(SHA3));
-		SHA3_free(s);
-	}
-	return(0);
 }

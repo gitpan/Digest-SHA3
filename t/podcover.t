@@ -25,9 +25,7 @@ if ($MODULE eq "Digest::SHA3") {
 		B64digest
 		Hexdigest
 		shaclose
-		shadump
 		shadup
-		shaload
 		shaopen
 		sharewind
 		shawrite

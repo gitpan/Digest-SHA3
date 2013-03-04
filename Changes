@@ -1,5 +1,12 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.06  Mon Mar  4 08:12:04 MST 2013
+	- removed code for standalone C operation (no longer used)
+		-- eliminates need for external symbols
+		-- reduces size of object files
+		-- thanks to Marc Lehmann for suggestions
+	- tweaked Makefile.PL to show dependencies of SHA3.c
+
 0.05  Thu Jan 24 04:54:14 MST 2013
 	- accommodated Unicode string input
 		-- by using SvPVbyte instead of SvPV in SHA3.xs

@@ -21,8 +21,6 @@ MODULE = Digest::SHA3		PACKAGE = Digest::SHA3
 
 PROTOTYPES: ENABLE
 
-#include "src/sha3.h"
-
 #ifndef INT2PTR
 #define INT2PTR(p, i) (p) (i)
 #endif
