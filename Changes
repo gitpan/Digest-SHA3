@@ -1,5 +1,11 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.07  Sat Mar  9 17:36:14 MST 2013
+	- untweaked Makefile.PL to remove dependencies of SHA3.c
+		-- dependencies were breaking builds on VMS
+		-- retaining dependencies provides too little benefit
+			for cost of portable workaround
+
 0.06  Mon Mar  4 08:12:04 MST 2013
 	- removed code for standalone C operation (no longer used)
 		-- eliminates need for external symbols

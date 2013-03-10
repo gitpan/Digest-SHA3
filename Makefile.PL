@@ -31,17 +31,12 @@ if ($Config{archname} =~ /^i[3456]86/ && $Config{ccname} eq 'gcc') {
 
 push(@extra, CCFLAGS => '-W -Wall ' . $Config{ccflags}) if $opts{'w'};
 
-my @srcs = map { "src/$_" } qw(sha3.c);
-my @hdrs = map { "src/$_" } qw(sha3.h);
-my $deps = join(' ', @srcs, @hdrs);
-
 my %att = (
 	'NAME'		=> 'Digest::SHA3',
 	'VERSION_FROM'	=> $PM,
 	'LIBS'		=> [''],
 	'INC'		=> '-I.',
 	'EXE_FILES'	=> [ 'sha3sum' ],
-	'depend'	=> { 'SHA3.c' => $deps },
 	@extra,
 );
 

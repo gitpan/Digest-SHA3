@@ -7,7 +7,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 use Fcntl;
 use integer;
 
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 require Exporter;
 require DynaLoader;
