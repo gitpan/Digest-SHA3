@@ -1,5 +1,13 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.08  Wed Jun 26 04:32:06 MST 2013
+	- workaround for repeated calls to shaclose
+		-- ref. Bug #86295 (posted at Digest::SHA)
+		-- need to explicitly reset internal pointer to NULL
+			ref. shaclose() in SHA3.xs
+	- corrected typos in sha3sum script
+		-- ref. Bug #85430 (posted at Digest::SHA)
+
 0.07  Sat Mar  9 17:36:14 MST 2013
 	- untweaked Makefile.PL to remove dependencies of SHA3.c
 		-- dependencies were breaking builds on VMS

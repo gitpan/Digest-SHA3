@@ -7,7 +7,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 use Fcntl;
 use integer;
 
-$VERSION = '0.07';
+$VERSION = '0.08';
 
 require Exporter;
 require DynaLoader;
@@ -54,7 +54,7 @@ sub new {
 
 sub DESTROY {
 	my $self = shift;
-	shaclose($$self) if $$self;
+	if ($$self) { shaclose($$self); $$self = undef }
 }
 
 sub clone {

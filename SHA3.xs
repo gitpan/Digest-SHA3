@@ -30,6 +30,9 @@ PROTOTYPES: ENABLE
 int
 shaclose(s)
 	SHA3 *	s
+CODE:
+	RETVAL = shaclose(s);
+	sv_setiv(SvRV(ST(0)), 0);
 
 SHA3 *
 shadup(s)
