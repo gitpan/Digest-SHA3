@@ -145,6 +145,7 @@ ALIAS:
 	Digest::SHA3::digest = 0
 	Digest::SHA3::Hexdigest = 1
 	Digest::SHA3::B64digest = 2
+	Digest::SHA3::squeeze = 3
 PREINIT:
 	STRLEN len;
 	SHA3 *state;
@@ -159,8 +160,14 @@ PPCODE:
 	}
 	else if (ix == 1)
 		result = shahex(state);
-	else
+	else if (ix == 2)
 		result = shabase64(state);
+	else {
+		if ((result = (char *) shasqueeze(state)) == NULL)
+			XSRETURN_UNDEF;
+		len = shadsize(state);
+	}
 	ST(0) = sv_2mortal(newSVpv(result, len));
-	sharewind(state);
+	if (ix != 3)
+		sharewind(state);
 	XSRETURN(1);

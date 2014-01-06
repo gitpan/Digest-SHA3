@@ -3,10 +3,10 @@
  *
  * Ref: http://keccak.noekeon.org/specs_summary.html
  *
- * Copyright (C) 2012-2013 Mark Shelor, All Rights Reserved
+ * Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
  *
- * Version: 0.08
- * Wed Jun 26 04:32:06 MST 2013
+ * Version: 0.09
+ * Sun Jan  5 19:08:32 MST 2014
  *
  */
 
@@ -165,7 +165,7 @@ static void sha3(SHA3 *s, UCHR *block)
 	keccak_f(s->S);
 }
 
-/* digcpy: write final SHA3 state to digest buffer */
+/* digcpy: write SHA3 state to digest buffer */
 static void digcpy(SHA3 *s)
 {
 	unsigned int x, y;
@@ -327,6 +327,9 @@ static void shafinish(SHA3 *s)
 {
 	UCHR b;		/* partial byte */
 
+	if (s->padded)
+		return;
+	s->padded = 1;
 	if (s->blockcnt % 8 == 0) {
 		s->block[s->blockcnt/8] = 0x01, s->blockcnt += 8;
 		while (s->blockcnt < s->blocksize)
@@ -358,6 +361,16 @@ static void shafinish(SHA3 *s)
 static UCHR *shadigest(SHA3 *s)
 {
 	digcpy(s);
+	return(s->digest);
+}
+
+/* shasqueeze: returns pointer to squeezed digest (binary) */
+static UCHR *shasqueeze(SHA3 *s)
+{
+	if (s->alg != SHA3_0)
+		return(NULL);
+	digcpy(s);
+	keccak_f(s->S);
 	return(s->digest);
 }
 

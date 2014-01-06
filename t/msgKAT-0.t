@@ -17,7 +17,6 @@ for (1 .. $numtests) {
 	my $Msg = pack("H*", shift @vecs);
 	my $Squeezed = shift @vecs;
 	my $computed = $sha3->add_bits($Msg, $Len)->hexdigest;
-#	print $computed, "\n";
 	print "not " unless $computed eq lc($Squeezed);
 	print "ok ", $_, "\n";
 }

@@ -7,7 +7,7 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 use Fcntl;
 use integer;
 
-$VERSION = '0.08';
+$VERSION = '0.09';
 
 require Exporter;
 require DynaLoader;
@@ -340,8 +340,7 @@ SHA3-0/224/256/384/512 digest encoded as a binary string.
 
 The digest size for SHA3-0 is 4096 bits (512 bytes), which can be
 truncated to any desired length.  The ability to generate even larger
-digest sizes might be supported in future versions of this module,
-pending interest from the user community.
+digest sizes is supported by means of the I<squeeze> method.
 
 =item B<sha3_0_hex($data, ...)>
 
@@ -522,6 +521,14 @@ the padding characters typical of Base64 encodings.  This omission is
 deliberate, and is done to maintain compatibility with the family of
 CPAN Digest modules.  See L</"PADDING OF BASE64 DIGESTS"> for details.
 
+=item B<squeeze>
+
+Returns the next 512 bytes of the SHA3-0 digest encoded as a binary
+string.  The I<squeeze> method may be called repeatedly to construct
+digests of any desired length.
+
+This method is B<applicable only to SHA3-0 objects>.
+
 =back
 
 =head1 SEE ALSO
@@ -541,13 +548,17 @@ L<http://keccak.noekeon.org/Keccak-submission-3.pdf>
 
 The author is particularly grateful to
 
+	Guido Bertoni
+	Joan Daemen
+	Michael Peeters 
 	Chris Skiscim
+	Gilles Van Assche
 
-for being on the ball, as usual.
+for ideas and suggestions beneficial to the construction of this module.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012-2013 Mark Shelor
+Copyright (C) 2012-2014 Mark Shelor
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

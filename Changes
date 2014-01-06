@@ -1,5 +1,9 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.09  Sun Jan  5 19:08:32 MST 2014
+	- added a 'squeeze' method for SHA3-0 objects
+		-- to construct SHA3-0 digests of any desired length
+
 0.08  Wed Jun 26 04:32:06 MST 2013
 	- workaround for repeated calls to shaclose
 		-- ref. Bug #86295 (posted at Digest::SHA)

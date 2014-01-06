@@ -3,10 +3,10 @@
  *
  * Ref: http://keccak.noekeon.org/specs_summary.html
  *
- * Copyright (C) 2012-2013 Mark Shelor, All Rights Reserved
+ * Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
  *
- * Version: 0.08
- * Wed Jun 26 04:32:06 MST 2013
+ * Version: 0.09
+ * Sun Jan  5 19:08:32 MST 2014
  *
  */
 
@@ -98,6 +98,7 @@ typedef struct SHA3 {
 	int digestlen;
 	char hex[SHA3_MAX_HEX_LEN+1];
 	char base64[SHA3_MAX_BASE64_LEN+1];
+	int padded;
 } SHA3;
 
 #endif	/* _INCLUDE_SHA3_H_ */

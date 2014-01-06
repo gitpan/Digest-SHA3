@@ -10,6 +10,7 @@ sha3sum
 src/sha3.c
 src/sha3.h
 t/allfcns.t
+t/monteKAT-0.t
 t/msgKAT-0.t
 t/msgKAT-224.t
 t/msgKAT-256.t
