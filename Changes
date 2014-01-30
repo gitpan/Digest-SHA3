@@ -1,5 +1,10 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.10  Thu Jan 30 08:24:30 MST 2014
+	- improved the performance of hexadecimal output functions
+		-- ref. 'shahex' in src/sha3.c
+		-- thanks to Thomas Drugeon for ideas and test script
+
 0.09  Sun Jan  5 19:08:32 MST 2014
 	- added a 'squeeze' method for SHA3-0 objects
 		-- to construct SHA3-0 digests of any desired length

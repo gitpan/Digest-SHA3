@@ -4,7 +4,7 @@ use Digest::SHA3;
 my $TAGS = join('|', qw(Seed MD));
 my @vecs = ();
 while (<DATA>) {
-	next unless /^\s*($TAGS)\s*=\s*([\dA-F]+)/o;
+	next unless /^\s*($TAGS)\s*=\s*([\da-fA-F]+)/o;
 	push(@vecs, $2);
 }
 
@@ -20,9 +20,7 @@ for $t (1 .. $numtests) {
 	for (1 .. 1000/8) {
 		$d = $sha->squeeze;
 	}
-	my $MD = shift @vecs;
-	my $computed = unpack("H*", substr($d, -64));
-	print "not " unless $computed eq lc($MD);
+	print "not " unless substr($d, -64) eq pack("H*", shift @vecs);
 	print "ok ", $t, "\n";
 }
 
