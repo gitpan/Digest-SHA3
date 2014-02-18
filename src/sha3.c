@@ -5,8 +5,8 @@
  *
  * Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
  *
- * Version: 0.10
- * Thu Jan 30 08:24:30 MST 2014
+ * Version: 0.11
+ * Mon Feb 17 16:42:04 MST 2014
  *
  */
 
@@ -166,7 +166,7 @@ static void sha3(SHA3 *s, UCHR *block)
 }
 
 /* digcpy: write SHA3 state to digest buffer */
-static void digcpy(SHA3 *s)
+static UCHR *digcpy(SHA3 *s)
 {
 	unsigned int x, y;
 	UCHR *Z = s->digest;
@@ -182,6 +182,7 @@ static void digcpy(SHA3 *s)
 		if ((outbits -= s->blocksize) > 0)
 			keccak_f(s->S);
 	}
+	return(s->digest);
 }
 
 #define NBYTES(nbits)   (((nbits) + 7) >> 3)
@@ -357,13 +358,6 @@ static void shafinish(SHA3 *s)
 	sha3(s, s->block);
 }
 
-/* shadigest: returns pointer to current digest (binary) */
-static UCHR *shadigest(SHA3 *s)
-{
-	digcpy(s);
-	return(s->digest);
-}
-
 /* shasqueeze: returns pointer to squeezed digest (binary) */
 static UCHR *shasqueeze(SHA3 *s)
 {
@@ -385,11 +379,11 @@ static char *shahex(SHA3 *s)
 	char *h;
 	UCHR *d;
 
-	digcpy(s);
+	d = digcpy(s);
 	s->hex[0] = '\0';
 	if (HEXLEN((size_t) s->digestlen) >= sizeof(s->hex))
 		return(s->hex);
-	for (i = 0, h = s->hex, d = s->digest; i < s->digestlen; i++) {
+	for (i = 0, h = s->hex; i < s->digestlen; i++) {
 		*h++ = xmap[(*d >> 4) & 0x0f];
 		*h++ = xmap[(*d++   ) & 0x0f];
 	}
@@ -424,29 +418,17 @@ static char *shabase64(SHA3 *s)
 	UCHR *q;
 	char out[5];
 
-	digcpy(s);
+	q = digcpy(s);
 	s->base64[0] = '\0';
 	if (B64LEN((size_t) s->digestlen) >= sizeof(s->base64))
 		return(s->base64);
-	for (n = s->digestlen, q = s->digest; n > 3; n -= 3, q += 3) {
+	for (n = s->digestlen; n > 3; n -= 3, q += 3) {
 		encbase64(q, 3, out);
 		strcat(s->base64, out);
 	}
 	encbase64(q, n, out);
 	strcat(s->base64, out);
 	return(s->base64);
-}
-
-/* shadsize: returns length of digest in bytes */
-static int shadsize(SHA3 *s)
-{
-	return(s->digestlen);
-}
-
-/* shaalg: returns which SHA-3 algorithm is being used */
-static int shaalg(SHA3 *s)
-{
-	return(s->alg);
 }
 
 /* shadup: duplicates current digest object */

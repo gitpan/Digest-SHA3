@@ -91,8 +91,8 @@ PPCODE:
 	shafinish(state);
 	len = 0;
 	if (ix % 3 == 0) {
-		result = (char *) shadigest(state);
-		len = shadsize(state);
+		result = (char *) digcpy(state);
+		len = state->digestlen;
 	}
 	else if (ix % 3 == 1)
 		result = shahex(state);
@@ -112,8 +112,10 @@ PREINIT:
 	SHA3 *state;
 	int result;
 PPCODE:
+	if (!sv_isa(self, "Digest::SHA3"))
+		XSRETURN_UNDEF;
 	state = INT2PTR(SHA3 *, SvIV(SvRV(SvRV(self))));
-	result = ix ? shaalg(state) : shadsize(state) << 3;
+	result = ix ? state->alg : state->digestlen << 3;
 	ST(0) = sv_2mortal(newSViv(result));
 	XSRETURN(1);
 
@@ -126,6 +128,8 @@ PREINIT:
 	STRLEN len;
 	SHA3 *state;
 PPCODE:
+	if (!sv_isa(self, "Digest::SHA3"))
+		XSRETURN_UNDEF;
 	state = INT2PTR(SHA3 *, SvIV(SvRV(SvRV(self))));
 	for (i = 1; i < items; i++) {
 		data = (unsigned char *) (SvPVbyte(ST(i), len));
@@ -151,12 +155,14 @@ PREINIT:
 	SHA3 *state;
 	char *result;
 PPCODE:
+	if (!sv_isa(self, "Digest::SHA3"))
+		XSRETURN_UNDEF;
 	state = INT2PTR(SHA3 *, SvIV(SvRV(SvRV(self))));
 	shafinish(state);
 	len = 0;
 	if (ix == 0) {
-		result = (char *) shadigest(state);
-		len = shadsize(state);
+		result = (char *) digcpy(state);
+		len = state->digestlen;
 	}
 	else if (ix == 1)
 		result = shahex(state);
@@ -165,7 +171,7 @@ PPCODE:
 	else {
 		if ((result = (char *) shasqueeze(state)) == NULL)
 			XSRETURN_UNDEF;
-		len = shadsize(state);
+		len = state->digestlen;
 	}
 	ST(0) = sv_2mortal(newSVpv(result, len));
 	if (ix != 3)

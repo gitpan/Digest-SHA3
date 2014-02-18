@@ -1,5 +1,9 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.11  Mon Feb 17 16:42:04 MST 2014
+	- tightened code in SHA3.xs
+		-- added sv_isa checks when invoking methods
+
 0.10  Thu Jan 30 08:24:30 MST 2014
 	- improved the performance of hexadecimal output functions
 		-- ref. 'shahex' in src/sha3.c
