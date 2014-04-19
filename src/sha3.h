@@ -5,16 +5,21 @@
  *
  * Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
  *
- * Version: 0.11
- * Mon Feb 17 16:42:04 MST 2014
+ * Version: 0.12
+ * Sat Apr 19 05:14:50 MST 2014
  *
  */
 
 #ifndef _INCLUDE_SHA3_H_
 #define _INCLUDE_SHA3_H_
 
-#include <string.h>
 #include <limits.h>
+
+#define SHA3_new	New
+#define SHA3_newz	Newz
+#define SHA3_free	Safefree
+#define SHA3_Copy	Copy
+#define SHA3_Zero	Zero
 
 #define SHA64_SHR(x, n)	((x) >> (n))
 #define SHA64_SHL(x, n)	((x) << (n))
@@ -49,7 +54,7 @@
 
 #if defined(BYTEORDER) && ((BYTEORDER==0x1234) || (BYTEORDER==0x12345678))
 	#if defined(SHA64_ALIGNED)
-		#define MEM2WORD(W, m)	memcpy(W, m, 8)
+		#define MEM2WORD(W, m)	SHA3_Copy(m, W, 8, char)
 	#endif
 #endif
 
@@ -99,6 +104,7 @@ typedef struct SHA3 {
 	char hex[SHA3_MAX_HEX_LEN+1];
 	char base64[SHA3_MAX_BASE64_LEN+1];
 	int padded;
+	int allocated;
 } SHA3;
 
 #endif	/* _INCLUDE_SHA3_H_ */

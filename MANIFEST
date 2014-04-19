@@ -7,9 +7,11 @@ SHA3.xs
 examples/dups3
 lib/Digest/SHA3.pm
 sha3sum
+src/sdf.c
 src/sha3.c
 src/sha3.h
 t/allfcns.t
+t/inheritance.t
 t/monteKAT-0.t
 t/msgKAT-0.t
 t/msgKAT-224.t

@@ -24,10 +24,11 @@ if ($MODULE eq "Digest::SHA3") {
 		Addfile
 		B64digest
 		Hexdigest
-		shaclose
-		shadup
 		shaopen
+		shaclose
+		shainit
 		sharewind
+		shadup
 		shawrite
 	);
 }

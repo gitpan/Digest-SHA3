@@ -1,1 +1,3 @@
-SHA3 *						T_PTROBJ
+TYPEMAP
+SHA3 *		T_PTROBJ
+PerlIO *	T_IN

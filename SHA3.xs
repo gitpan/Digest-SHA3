@@ -12,38 +12,57 @@
 	#define SvPVbyte SvPV
 #endif
 
+#ifndef PerlIO
+	#define PerlIO				FILE
+	#define PerlIO_read(f, buf, count)	fread(buf, 1, count, f)
+#endif
+
+#ifndef sv_derived_from
+	#include "src/sdf.c"
+#endif
+
 #include "src/sha3.c"
 
 static int ix2alg[] =
 	{0,0,0,224,224,224,256,256,256,384,384,384,512,512,512};
-
-MODULE = Digest::SHA3		PACKAGE = Digest::SHA3
-
-PROTOTYPES: ENABLE
 
 #ifndef INT2PTR
 #define INT2PTR(p, i) (p) (i)
 #endif
 
 #define MAX_WRITE_SIZE 16384
+#define IO_BUFFER_SIZE 4096
 
-int
-shaclose(s)
-	SHA3 *	s
-CODE:
-	RETVAL = shaclose(s);
-	sv_setiv(SvRV(ST(0)), 0);
+static SHA3 *getSHA3(SV *self)
+{
+	if (!sv_isobject(self) || !sv_derived_from(self, "Digest::SHA3"))
+		return(NULL);
+	return(INT2PTR(SHA3 *, SvIV(SvRV(SvRV(self)))));
+}
 
-SHA3 *
-shadup(s)
-	SHA3 *	s
+MODULE = Digest::SHA3		PACKAGE = Digest::SHA3
+
+PROTOTYPES: ENABLE
 
 SHA3 *
 shaopen(alg)
 	int	alg
 
+int
+shaclose(s)
+	SHA3 *	s
+
+SHA3 *
+shainit(s, alg)
+	SHA3 *	s
+	int	alg
+
 void
 sharewind(s)
+	SHA3 *	s
+
+SHA3 *
+shadup(s)
 	SHA3 *	s
 
 unsigned long
@@ -52,7 +71,7 @@ shawrite(bitstr, bitcnt, s)
 	unsigned long	bitcnt
 	SHA3 *	s
 
-void
+SV *
 sha3_0(...)
 ALIAS:
 	Digest::SHA3::sha3_0 = 0
@@ -72,37 +91,37 @@ ALIAS:
 	Digest::SHA3::sha3_512_base64 = 14
 PREINIT:
 	int i;
-	unsigned char *data;
+	UCHR *data;
 	STRLEN len;
-	SHA3 *state;
+	SHA3 sha3;
 	char *result;
-PPCODE:
-	if ((state = shaopen(ix2alg[ix])) == NULL)
+CODE:
+	if (shainit(&sha3, ix2alg[ix]) == NULL)
 		XSRETURN_UNDEF;
 	for (i = 0; i < items; i++) {
-		data = (unsigned char *) (SvPVbyte(ST(i), len));
+		data = (UCHR *) (SvPVbyte(ST(i), len));
 		while (len > MAX_WRITE_SIZE) {
-			shawrite(data, MAX_WRITE_SIZE << 3, state);
+			shawrite(data, MAX_WRITE_SIZE << 3, &sha3);
 			data += MAX_WRITE_SIZE;
 			len  -= MAX_WRITE_SIZE;
 		}
-		shawrite(data, len << 3, state);
+		shawrite(data, len << 3, &sha3);
 	}
-	shafinish(state);
+	shafinish(&sha3);
 	len = 0;
 	if (ix % 3 == 0) {
-		result = (char *) digcpy(state);
-		len = state->digestlen;
+		result = (char *) shadigest(&sha3);
+		len = sha3.digestlen;
 	}
 	else if (ix % 3 == 1)
-		result = shahex(state);
+		result = shahex(&sha3);
 	else
-		result = shabase64(state);
-	ST(0) = sv_2mortal(newSVpv(result, len));
-	shaclose(state);
-	XSRETURN(1);
+		result = shabase64(&sha3);
+	RETVAL = newSVpv(result, len);
+OUTPUT:
+	RETVAL
 
-void
+int
 hashsize(self)
 	SV *	self
 ALIAS:
@@ -111,28 +130,26 @@ ALIAS:
 PREINIT:
 	SHA3 *state;
 	int result;
-PPCODE:
-	if (!sv_isa(self, "Digest::SHA3"))
+CODE:
+	if ((state = getSHA3(self)) == NULL)
 		XSRETURN_UNDEF;
-	state = INT2PTR(SHA3 *, SvIV(SvRV(SvRV(self))));
-	result = ix ? state->alg : state->digestlen << 3;
-	ST(0) = sv_2mortal(newSViv(result));
-	XSRETURN(1);
+	RETVAL = ix ? state->alg : state->digestlen << 3;
+OUTPUT:
+	RETVAL
 
 void
 add(self, ...)
 	SV *	self
 PREINIT:
 	int i;
-	unsigned char *data;
+	UCHR *data;
 	STRLEN len;
 	SHA3 *state;
 PPCODE:
-	if (!sv_isa(self, "Digest::SHA3"))
+	if ((state = getSHA3(self)) == NULL)
 		XSRETURN_UNDEF;
-	state = INT2PTR(SHA3 *, SvIV(SvRV(SvRV(self))));
 	for (i = 1; i < items; i++) {
-		data = (unsigned char *) (SvPVbyte(ST(i), len));
+		data = (UCHR *) (SvPVbyte(ST(i), len));
 		while (len > MAX_WRITE_SIZE) {
 			shawrite(data, MAX_WRITE_SIZE << 3, state);
 			data += MAX_WRITE_SIZE;
@@ -142,7 +159,7 @@ PPCODE:
 	}
 	XSRETURN(1);
 
-void
+SV *
 digest(self)
 	SV *	self
 ALIAS:
@@ -154,14 +171,13 @@ PREINIT:
 	STRLEN len;
 	SHA3 *state;
 	char *result;
-PPCODE:
-	if (!sv_isa(self, "Digest::SHA3"))
+CODE:
+	if ((state = getSHA3(self)) == NULL)
 		XSRETURN_UNDEF;
-	state = INT2PTR(SHA3 *, SvIV(SvRV(SvRV(self))));
 	shafinish(state);
 	len = 0;
 	if (ix == 0) {
-		result = (char *) digcpy(state);
+		result = (char *) shadigest(state);
 		len = state->digestlen;
 	}
 	else if (ix == 1)
@@ -173,7 +189,68 @@ PPCODE:
 			XSRETURN_UNDEF;
 		len = state->digestlen;
 	}
-	ST(0) = sv_2mortal(newSVpv(result, len));
+	RETVAL = newSVpv(result, len);
 	if (ix != 3)
 		sharewind(state);
+OUTPUT:
+	RETVAL
+
+void
+_addfilebin(self, f)
+	SV *		self
+	PerlIO *	f
+PREINIT:
+	SHA3 *state;
+	int n;
+	char in[IO_BUFFER_SIZE];
+PPCODE:
+	if (!f || (state = getSHA3(self)) == NULL)
+		XSRETURN_UNDEF;
+	while ((n = PerlIO_read(f, in, sizeof(in))) > 0)
+		shawrite(in, n << 3, state);
+	XSRETURN(1);
+
+void
+_addfileuniv(self, f)
+	SV *		self
+	PerlIO *	f
+PREINIT:
+	char c;
+	int n;
+	int cr = 0;
+	char *src, *dst;
+	char in[IO_BUFFER_SIZE+1];
+	SHA3 *state;
+PPCODE:
+	if (!f || (state = getSHA3(self)) == NULL)
+		XSRETURN_UNDEF;
+	while ((n = PerlIO_read(f, in+1, IO_BUFFER_SIZE)) > 0) {
+		for (dst = in, src = in + 1; n; n--) {
+			c = *src++;
+			if (!cr) {
+				if (c == '\015')
+					cr = 1;
+				else
+					*dst++ = c;
+			}
+			else {
+				if (c == '\015')
+					*dst++ = '\012';
+				else if (c == '\012') {
+					*dst++ = '\012';
+					cr = 0;
+				}
+				else {
+					*dst++ = '\012';
+					*dst++ = c;
+					cr = 0;
+				}
+			}
+		}
+		shawrite(in, (dst - in) << 3, state);
+	}
+	if (cr) {
+		in[0] = '\012';
+		shawrite(in, 1 << 3, state);
+	}
 	XSRETURN(1);

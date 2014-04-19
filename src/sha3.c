@@ -5,8 +5,8 @@
  *
  * Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
  *
- * Version: 0.11
- * Mon Feb 17 16:42:04 MST 2014
+ * Version: 0.12
+ * Sat Apr 19 05:14:50 MST 2014
  *
  */
 
@@ -190,45 +190,71 @@ static UCHR *digcpy(SHA3 *s)
 #define B64LEN(nbytes)	(((nbytes) % 3 == 0) ? ((nbytes) / 3) * 4 \
 			: ((nbytes) / 3) * 4 + ((nbytes) % 3) + 1)
 
-#define SHA3_INIT(algo)							\
+#define SHA3_INIT(s, algo)						\
 	do {								\
-		memset(s, 0, sizeof(SHA3));				\
+		int allocated = s->allocated;				\
+		SHA3_Zero(s, 1, SHA3);					\
 		s->alg = algo;						\
 		s->blocksize = SHA3_ ## algo ## _BLOCK_BITS;		\
 		s->digestlen = SHA3_ ## algo ## _DIGEST_BITS >> 3;	\
+		s->allocated = allocated;				\
 	} while (0)
 
-/* sharewind: re-initializes the digest object */
+/* sharewind: resets digest object */
 static void sharewind(SHA3 *s)
 {
-	if      (s->alg == SHA3_0)   SHA3_INIT(0);
-	else if (s->alg == SHA3_224) SHA3_INIT(224);
-	else if (s->alg == SHA3_256) SHA3_INIT(256);
-	else if (s->alg == SHA3_384) SHA3_INIT(384);
-	else if (s->alg == SHA3_512) SHA3_INIT(512);
+	if      (s->alg == SHA3_0)   SHA3_INIT(s, 0);
+	else if (s->alg == SHA3_224) SHA3_INIT(s, 224);
+	else if (s->alg == SHA3_256) SHA3_INIT(s, 256);
+	else if (s->alg == SHA3_384) SHA3_INIT(s, 384);
+	else if (s->alg == SHA3_512) SHA3_INIT(s, 512);
 }
 
-/* shaopen: creates a new digest object */
-static SHA3 *shaopen(int alg)
+/* shainit: initializes digest object */
+static SHA3 *shainit(SHA3 *s, int alg)
 {
-	SHA3 *s = NULL;
-
 	if (alg != SHA3_0 && alg != SHA3_224 && alg != SHA3_256 &&
 		alg != SHA3_384 && alg != SHA3_512)
-		return(NULL);
-	SHA3_newz(0, s, 1, SHA3);
-	if (s == NULL)
 		return(NULL);
 	s->alg = alg;
 	sharewind(s);
 	return(s);
 }
 
-/* shaclose: de-allocates digest object */
+/* shaopen: creates new digest object */
+static SHA3 *shaopen(int alg)
+{
+	SHA3 *s;
+
+	SHA3_newz(0, s, 1, SHA3);
+	if (s == NULL)
+		return(NULL);
+	if (shainit(s, alg) == NULL) {
+		SHA3_free(s);
+		return(NULL);
+	}
+	s->allocated = 1;
+	return(s);
+}
+
+/* shadup: duplicates digest object */
+static SHA3 *shadup(SHA3 *s)
+{
+	SHA3 *p;
+
+	SHA3_new(0, p, 1, SHA3);
+	if (p == NULL)
+		return(NULL);
+	SHA3_Copy(s, p, 1, SHA3);
+	p->allocated = 1;
+	return(p);
+}
+
+/* shaclose: frees memory used by digest object */
 static int shaclose(SHA3 *s)
 {
-	if (s != NULL) {
-		memset(s, 0, sizeof(SHA3));
+	if (s->allocated) {
+		s->allocated = 0;
 		SHA3_free(s);
 	}
 	return(0);
@@ -245,13 +271,13 @@ static ULNG shadirect(UCHR *bitstr, ULNG bitcnt, SHA3 *s)
 		bitcnt -= s->blocksize;
 	}
 	if (bitcnt > 0) {
-		memcpy(s->block, bitstr, NBYTES(bitcnt));
+		SHA3_Copy(bitstr, s->block, NBYTES(bitcnt), char);
 		s->blockcnt = bitcnt;
 	}
 	return(savecnt);
 }
 
-/* shabytes: updates state for byte-aligned input data */
+/* shabytes: updates state for byte-aligned data in s->block */
 static ULNG shabytes(UCHR *bitstr, ULNG bitcnt, SHA3 *s)
 {
 	UINT offset;
@@ -261,20 +287,20 @@ static ULNG shabytes(UCHR *bitstr, ULNG bitcnt, SHA3 *s)
 	offset = s->blockcnt >> 3;
 	if (s->blockcnt + bitcnt >= s->blocksize) {
 		nbits = s->blocksize - s->blockcnt;
-		memcpy(s->block+offset, bitstr, nbits>>3);
+		SHA3_Copy(bitstr, s->block+offset, nbits>>3, char);
 		bitcnt -= nbits;
 		bitstr += (nbits >> 3);
 		sha3(s, s->block), s->blockcnt = 0;
 		shadirect(bitstr, bitcnt, s);
 	}
 	else {
-		memcpy(s->block+offset, bitstr, NBYTES(bitcnt));
+		SHA3_Copy(bitstr, s->block+offset, NBYTES(bitcnt), char);
 		s->blockcnt += bitcnt;
 	}
 	return(savecnt);
 }
 
-/* shabits: updates state for bit-aligned input data */
+/* shabits: updates state for bit-aligned data in s->block */
 static ULNG shabits(UCHR *bitstr, ULNG bitcnt, SHA3 *s)
 {
 	UINT i;
@@ -368,6 +394,8 @@ static UCHR *shasqueeze(SHA3 *s)
 	return(s->digest);
 }
 
+#define shadigest(state)	digcpy(state)
+
 /* xmap: translation map for hexadecimal encoding */
 static char xmap[] =
 	"0123456789abcdef";
@@ -403,7 +431,7 @@ static void encbase64(UCHR *in, int n, char *out)
 	out[0] = '\0';
 	if (n < 1 || n > 3)
 		return;
-	memcpy(byte, in, n);
+	SHA3_Copy(in, byte, n, UCHR);
 	out[0] = bmap[byte[0] >> 2];
 	out[1] = bmap[((byte[0] & 0x03) << 4) | (byte[1] >> 4)];
 	out[2] = bmap[((byte[1] & 0x0f) << 2) | (byte[2] >> 6)];
@@ -429,16 +457,4 @@ static char *shabase64(SHA3 *s)
 	encbase64(q, n, out);
 	strcat(s->base64, out);
 	return(s->base64);
-}
-
-/* shadup: duplicates current digest object */
-static SHA3 *shadup(SHA3 *s)
-{
-	SHA3 *p;
-
-	SHA3_new(0, p, 1, SHA3);
-	if (p == NULL)
-		return(NULL);
-	memcpy(p, s, sizeof(SHA3));
-	return(p);
 }
