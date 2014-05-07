@@ -4,14 +4,19 @@
 	##
 	## Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
 	##
-	## Version: 0.12
-	## Sat Apr 19 05:14:50 MST 2014
+	## Version: 0.20
+	## Wed May  7 07:57:10 MST 2014
 
 	## sha3sum SYNOPSIS adapted from GNU Coreutils sha1sum. Add
 	## "-a" option for algorithm selection,
 	## "-U" option for Universal Newlines support,
 	## "-0" option for reading bit strings, and
 	## "-p" option for portable digests (to be deprecated).
+
+use strict;
+use warnings;
+use Fcntl;
+use Getopt::Long;
 
 my $POD = <<'END_OF_POD';
 
@@ -87,11 +92,7 @@ I<sha3sum> is implemented using the Perl module L<Digest::SHA3>.
 
 END_OF_POD
 
-use strict;
-use Fcntl;
-use Getopt::Long;
-
-my $VERSION = "0.12";
+my $VERSION = "0.20";
 
 
 	## Try to use Digest::SHA3.  If not installed, use the slower

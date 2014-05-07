@@ -21,6 +21,11 @@
 	#include "src/sdf.c"
 #endif
 
+#ifndef Newx
+	#define Newx(ptr, num, type)	New(0, ptr, num, type)
+	#define Newxz(ptr, num, type)	Newz(0, ptr, num, type)
+#endif
+
 #include "src/sha3.c"
 
 static int ix2alg[] =
@@ -37,22 +42,14 @@ static SHA3 *getSHA3(SV *self)
 {
 	if (!sv_isobject(self) || !sv_derived_from(self, "Digest::SHA3"))
 		return(NULL);
-	return(INT2PTR(SHA3 *, SvIV(SvRV(SvRV(self)))));
+	return INT2PTR(SHA3 *, SvIV(SvRV(self)));
 }
 
 MODULE = Digest::SHA3		PACKAGE = Digest::SHA3
 
 PROTOTYPES: ENABLE
 
-SHA3 *
-shaopen(alg)
-	int	alg
-
 int
-shaclose(s)
-	SHA3 *	s
-
-SHA3 *
 shainit(s, alg)
 	SHA3 *	s
 	int	alg
@@ -61,15 +58,52 @@ void
 sharewind(s)
 	SHA3 *	s
 
-SHA3 *
-shadup(s)
-	SHA3 *	s
-
 unsigned long
 shawrite(bitstr, bitcnt, s)
 	unsigned char *	bitstr
 	unsigned long	bitcnt
 	SHA3 *	s
+
+SV *
+newSHA3(class, alg)
+	char *	class
+	int 	alg
+PREINIT:
+	SHA3 *state;
+CODE:
+	Newxz(state, 1, SHA3);
+	if (!shainit(state, alg)) {
+		Safefree(state);
+		XSRETURN_UNDEF;
+	}
+	RETVAL = newSV(0);
+	sv_setref_pv(RETVAL, class, (void *) state);
+	SvREADONLY_on(SvRV(RETVAL));
+OUTPUT:
+	RETVAL
+
+SV *
+clone(self)
+	SV *	self
+PREINIT:
+	SHA3 *state;
+	SHA3 *clone;
+CODE:
+	if ((state = getSHA3(self)) == NULL)
+		XSRETURN_UNDEF;
+	Newx(clone, 1, SHA3);
+	RETVAL = newSV(0);
+	sv_setref_pv(RETVAL, sv_reftype(SvRV(self), 1), (void *) clone);
+	SvREADONLY_on(SvRV(RETVAL));
+	Copy(state, clone, 1, SHA3);
+OUTPUT:
+	RETVAL
+
+void
+DESTROY(s)
+	SHA3 *	s
+CODE:
+	Safefree(s);
 
 SV *
 sha3_0(...)
@@ -96,7 +130,7 @@ PREINIT:
 	SHA3 sha3;
 	char *result;
 CODE:
-	if (shainit(&sha3, ix2alg[ix]) == NULL)
+	if (!shainit(&sha3, ix2alg[ix]))
 		XSRETURN_UNDEF;
 	for (i = 0; i < items; i++) {
 		data = (UCHR *) (SvPVbyte(ST(i), len));
@@ -129,7 +163,6 @@ ALIAS:
 	Digest::SHA3::algorithm = 1
 PREINIT:
 	SHA3 *state;
-	int result;
 CODE:
 	if ((state = getSHA3(self)) == NULL)
 		XSRETURN_UNDEF;
@@ -164,8 +197,8 @@ digest(self)
 	SV *	self
 ALIAS:
 	Digest::SHA3::digest = 0
-	Digest::SHA3::Hexdigest = 1
-	Digest::SHA3::B64digest = 2
+	Digest::SHA3::hexdigest = 1
+	Digest::SHA3::b64digest = 2
 	Digest::SHA3::squeeze = 3
 PREINIT:
 	STRLEN len;
@@ -202,7 +235,7 @@ _addfilebin(self, f)
 PREINIT:
 	SHA3 *state;
 	int n;
-	char in[IO_BUFFER_SIZE];
+	UCHR in[IO_BUFFER_SIZE];
 PPCODE:
 	if (!f || (state = getSHA3(self)) == NULL)
 		XSRETURN_UNDEF;
@@ -218,8 +251,8 @@ PREINIT:
 	char c;
 	int n;
 	int cr = 0;
-	char *src, *dst;
-	char in[IO_BUFFER_SIZE+1];
+	UCHR *src, *dst;
+	UCHR in[IO_BUFFER_SIZE+1];
 	SHA3 *state;
 PPCODE:
 	if (!f || (state = getSHA3(self)) == NULL)

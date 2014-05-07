@@ -21,14 +21,9 @@ my @privfcns = ();
 
 if ($MODULE eq "Digest::SHA3") {
 	@privfcns = qw(
-		Addfile
-		B64digest
-		Hexdigest
-		shaopen
-		shaclose
+		newSHA3
 		shainit
 		sharewind
-		shadup
 		shawrite
 	);
 }

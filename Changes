@@ -1,5 +1,13 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.20  Wed May  7 07:57:10 MST 2014
+	- consolidated all dynamic memory allocation into XSUBs
+		-- streamlines referencing of SHA3 objects
+		-- simplifies DESTROYing of objects
+	- enhanced Makefile.PL to allow 'use warnings'
+		-- automatically reverts to $^W for early Perls
+	- scrubbed C and Perl code to remove all compiler warnings
+
 0.12  Sat Apr 19 05:14:50 MST 2014
 	- added universal newlines mode ("U") to addfile and sha3sum
 		-- based on Python Universal Newlines concept
