@@ -70,7 +70,7 @@ if ($Config{archname} =~ /^i[3456]86/ && $Config{ccname} eq 'gcc') {
 
 push(@extra, CCFLAGS => '-W -Wall ' . $Config{ccflags}) if $opt_w;
 
-my %att = (
+my %attr = (
 	'NAME'		=> 'Digest::SHA3',
 	'VERSION_FROM'	=> $PM,
 	'LIBS'		=> [''],
@@ -80,6 +80,6 @@ my %att = (
 );
 
 my $MMversion = $ExtUtils::MakeMaker::VERSION || '0.00_00';
-$att{NO_META} = 1 if $MMversion ge '6.10_03';
+$attr{NO_META} = 1 if $MMversion ge '6.10_03';
 
-WriteMakefile(%att);
+WriteMakefile(%attr);
