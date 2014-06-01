@@ -4,8 +4,8 @@
 	##
 	## Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
 	##
-	## Version: 0.21
-	## Fri May 16 10:21:46 MST 2014
+	## Version: 0.22
+	## Sun Jun  1 00:15:46 MST 2014
 
 	## sha3sum SYNOPSIS adapted from GNU Coreutils sha1sum. Add
 	## "-a" option for algorithm selection,
@@ -92,7 +92,7 @@ I<sha3sum> is implemented using the Perl module L<Digest::SHA3>.
 
 END_OF_POD
 
-my $VERSION = "0.21";
+my $VERSION = "0.22";
 
 
 	## Try to use Digest::SHA3.  If not installed, use the slower

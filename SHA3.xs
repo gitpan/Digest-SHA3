@@ -65,8 +65,8 @@ shawrite(bitstr, bitcnt, s)
 	SHA3 *	s
 
 SV *
-newSHA3(class, alg)
-	char *	class
+newSHA3(classname, alg)
+	char *	classname
 	int 	alg
 PREINIT:
 	SHA3 *state;
@@ -77,7 +77,7 @@ CODE:
 		XSRETURN_UNDEF;
 	}
 	RETVAL = newSV(0);
-	sv_setref_pv(RETVAL, class, (void *) state);
+	sv_setref_pv(RETVAL, classname, (void *) state);
 	SvREADONLY_on(SvRV(RETVAL));
 OUTPUT:
 	RETVAL

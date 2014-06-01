@@ -5,8 +5,8 @@
  *
  * Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
  *
- * Version: 0.21
- * Fri May 16 10:21:46 MST 2014
+ * Version: 0.22
+ * Sun Jun  1 00:15:46 MST 2014
  *
  */
 
@@ -31,7 +31,7 @@ static void word2mem(UCHR *mem, W64 w)
 	UCHR *p = mem;
 
 	for (i = 0; i < 8; i++, w >>= 8)
-		*p++ = w & 0xff;
+		*p++ = (UCHR) (w & 0xff);
 }
 
 static W64 RC[] = {	/* Keccak round constants */

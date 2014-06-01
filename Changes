@@ -1,5 +1,10 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.22  Sun Jun  1 00:15:46 MST 2014
+	- fixed reserved-word clash when compiling with C++
+		-- use 'classname' instead of 'class'
+			-- ref. SHA3.xs (rt.cpan.org #96090)
+
 0.21  Fri May 16 10:21:46 MST 2014
 	- restored original 'addfile' for use on opened file handles
 		-- allows callbacks in place of actual files
