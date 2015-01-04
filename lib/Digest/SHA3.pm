@@ -8,13 +8,14 @@ use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
 use Fcntl;
 use integer;
 
-$VERSION = '0.22';
+$VERSION = '0.23';
 
 require Exporter;
 require DynaLoader;
 @ISA = qw(Exporter DynaLoader);
 @EXPORT_OK = qw(
-	sha3_0		sha3_0_base64		sha3_0_hex
+	shake128	shake128_base64		shake128_hex
+	shake256	shake256_base64		shake256_hex
 	sha3_224	sha3_224_base64		sha3_224_hex
 	sha3_256	sha3_256_base64		sha3_256_hex
 	sha3_384	sha3_384_base64		sha3_384_hex
@@ -32,7 +33,7 @@ eval {
 sub new {
 	my($class, $alg) = @_;
 	$alg =~ s/\D+//g if defined $alg;
-	$alg =~ s/^3?(0|224|256|384|512)$/$1/ if defined $alg;
+	$alg =~ s/^3?(224|256|384|512|128000|256000)$/$1/ if defined $alg;
 	if (ref($class)) {	# instance method
 		if (!defined($alg) || ($alg == $class->algorithm)) {
 			sharewind($class);
@@ -163,8 +164,6 @@ In programs:
 	$digest = sha3_384_base64($data);
 	$digest = sha3_512($data);
 
-	$digest = sha3_0_hex($data);
-
 		# Object-oriented
 
 	use Digest::SHA3;
@@ -183,14 +182,28 @@ In programs:
 	$digest = $sha3->hexdigest;
 	$digest = $sha3->b64digest;
 
+		# Compute extendable-length digest
+
+	$sha3 = Digest::SHA3->new(128000)->add($data);	# SHAKE128
+	$digest  = $sha3->squeeze;
+	$digest .= $sha3->squeeze;
+	...
+
+	$sha3 = Digest::SHA3->new(256000)->add($data);	# SHAKE256
+	$digest  = $sha3->squeeze;
+	$digest .= $sha3->squeeze;
+	...
+
 =head1 ABSTRACT
 
 Digest::SHA3 is a complete implementation of the NIST SHA-3
-cryptographic hash function, known originally as Keccak.  It gives
-Perl programmers a convenient way to calculate SHA3-224, SHA3-256,
-SHA3-384, and SHA3-512 message digests, as well as variable-length
-hashes using the SHA3-0 variant.  The module can handle all types of
-input, including partial-byte data.
+cryptographic hash function, as specified in Draft FIPS 202 (SHA-3
+Standard: Permutation-Based Hash and Extendable-Output Functions).
+
+The module gives Perl programmers a convenient way to calculate
+SHA3-224, SHA3-256, SHA3-384, and SHA3-512 message digests, as well
+as variable-length hashes using SHAKE128 and SHAKE256.  Digest::SHA3
+can handle all types of input, including partial-byte data.
 
 =head1 DESCRIPTION
 
@@ -241,7 +254,7 @@ in the customary packed binary format used for Perl strings.
 =head1 UNICODE AND SIDE EFFECTS
 
 Perl supports Unicode strings as of version 5.6.  Such strings may
-contain wide characters, namely, characters whose ordinal values are
+contain wide characters: namely, characters whose ordinal values are
 greater than 255.  This can cause problems for digest algorithms such
 as SHA-3 that are specified to operate on sequences of bytes.
 
@@ -285,11 +298,11 @@ of the digest until it is:
 
 To illustrate, I<sha3_256_base64("abc")> is computed to be
 
-	TgNleupFqU/H1HuoJsjWZ8DR5uM6ZKA27ET1j6EtbEU
+	Ophdp0/iJbIEXBcta9OQvYVfCG4+nVJbRr/iRRFDFTI
 
 which has a length of 43.  So, the properly padded version is
 
-	TgNleupFqU/H1HuoJsjWZ8DR5uM6ZKA27ET1j6EtbEU=
+	Ophdp0/iJbIEXBcta9OQvYVfCG4+nVJbRr/iRRFDFTI=
 
 =head1 EXPORT
 
@@ -297,23 +310,22 @@ None by default.
 
 =head1 EXPORTABLE FUNCTIONS
 
-Provided your C compiler supports a 64-bit type (e.g. the I<long long> of
-C99, or I<__int64> used by Microsoft C/C++), all of these functions will
-be available for use.  Otherwise you won't be able to perform any of them.
+Provided your C compiler supports a 64-bit type (e.g. the I<long
+long> of C99, or I<__int64> used by Microsoft C/C++), all of these
+functions will be available for use.  Otherwise you won't be able
+to perform any of them.
 
 In the interest of simplicity, maintainability, and small code size,
-it's unlikely that future versions of this module will support a 32-bit
-implementation.  Older platforms using 32-bit-only compilers should
-continue to favor 32-bit hash implementations such as SHA-1, SHA-224,
-or SHA-256.  The desire to use the SHA-3 hash standard, dating from 2012,
-should reasonably require that one's compiler adhere to programming
-language standards dating from at least 1999.
+it's unlikely that future versions of this module will support a
+32-bit implementation.  Older platforms using 32-bit-only compilers
+should continue to favor 32-bit hash implementations such as SHA-1,
+SHA-224, or SHA-256.  The desire to use the SHA-3 hash standard,
+dating from 2012, should reasonably require that one's compiler
+adhere to programming language standards dating from at least 1999.
 
 I<Functional style>
 
 =over 4
-
-=item B<sha3_0($data, ...)>
 
 =item B<sha3_224($data, ...)>
 
@@ -323,14 +335,17 @@ I<Functional style>
 
 =item B<sha3_512($data, ...)>
 
+=item B<shake128($data, ...)>
+
+=item B<shake256($data, ...)>
+
 Logically joins the arguments into a single string, and returns its
 SHA3-0/224/256/384/512 digest encoded as a binary string.
 
-The digest size for SHA3-0 is 4096 bits (512 bytes), which can be
-truncated to any desired length.  The ability to generate even larger
-digest sizes is supported by means of the I<squeeze> method.
-
-=item B<sha3_0_hex($data, ...)>
+The digest size for shake128 is 1344 bits (168 bytes); for shake256,
+it's 1088 bits (136 bytes).  To obtain extendable-output from the
+SHAKE algorithms, use the object-oriented interface with repeated
+calls to the I<squeeze> method.
 
 =item B<sha3_224_hex($data, ...)>
 
@@ -340,10 +355,13 @@ digest sizes is supported by means of the I<squeeze> method.
 
 =item B<sha3_512_hex($data, ...)>
 
-Logically joins the arguments into a single string, and returns
-its SHA3-0/224/256/384/512 digest encoded as a hexadecimal string.
+=item B<shake128_hex($data, ...)>
 
-=item B<sha3_0_base64($data, ...)>
+=item B<shake256_hex($data, ...)>
+
+Logically joins the arguments into a single string, and returns
+its SHA3-0/224/256/384/512 or SHAKE128/256 digest encoded as a
+hexadecimal string.
 
 =item B<sha3_224_base64($data, ...)>
 
@@ -353,8 +371,13 @@ its SHA3-0/224/256/384/512 digest encoded as a hexadecimal string.
 
 =item B<sha3_512_base64($data, ...)>
 
+=item B<shake128_base64($data, ...)>
+
+=item B<shake256_base64($data, ...)>
+
 Logically joins the arguments into a single string, and returns
-its SHA3-0/224/256/384/512 digest encoded as a Base64 string.
+its SHA3-0/224/256/384/512 or SHAKE128/256 digest encoded as a
+Base64 string.
 
 It's important to note that the resulting string does B<not> contain
 the padding characters typical of Base64 encodings.  This omission is
@@ -369,10 +392,10 @@ I<OOP style>
 
 =item B<new($alg)>
 
-Returns a new Digest::SHA3 object.  Allowed values for I<$alg> are 0, 224,
-256, 384, or 512.  It's also possible to use common string representations
-of the algorithm (e.g. "sha3-256", "SHA-3-384").  If the argument is
-missing, SHA3-224 will be used by default.
+Returns a new Digest::SHA3 object.  Allowed values for I<$alg>
+are 224, 256, 384, and 512 for the SHA3 algorithms; or 128000 and
+256000 for SHAKE128 and SHAKE256, respectively.  If the argument
+is missing, SHA3-224 will be used by default.
 
 Invoking I<new> as an instance method will not create a new object;
 instead, it will simply reset the object to the initial state associated
@@ -386,20 +409,15 @@ I<reset> is just an alias for I<new>.
 
 =item B<hashsize>
 
-Returns the number of digest bits for this object.  The values are 4096,
-224, 256, 384, and 512 for SHA3-0, SHA3-224, SHA3-256, SHA3-384, and
-SHA3-512, respectively.
-
-The associated digest size for SHA3-0 is 4096 bits (512 bytes), which
-can be truncated to any desired length.  The ability to generate even
-larger digest sizes might be supported in future versions of this module,
-pending interest from the user community.
+Returns the number of digest bits for this object.  The values
+are 224, 256, 384, 512, 1344, and 1088 for SHA3-224, SHA3-256,
+SHA3-384, SHA3-512, SHAKE128, and SHAKE256, respectively.
 
 =item B<algorithm>
 
-Returns the digest algorithm for this object.  The values are 0, 224,
-256, 384, and 512 for SHA3-0, SHA3-224, SHA3-256, SHA3-384, and SHA3-512,
-respectively.
+Returns the digest algorithm for this object.  The values are 224,
+256, 384, 512, 128000, and 256000 for SHA3-224, SHA3-256, SHA3-384,
+SHA3-512, SHAKE128, and SHAKE256, respectively.
 
 =item B<clone>
 
@@ -508,23 +526,28 @@ I<$sha-E<gt>clone-E<gt>b64digest> if it's necessary to preserve the
 original digest state.
 
 It's important to note that the resulting string does B<not> contain
-the padding characters typical of Base64 encodings.  This omission is
-deliberate, and is done to maintain compatibility with the family of
-CPAN Digest modules.  See L</"PADDING OF BASE64 DIGESTS"> for details.
+the padding characters typical of Base64 encodings.  This omission
+is deliberate, and is done to maintain compatibility with the
+family of CPAN Digest modules.  See L</"PADDING OF BASE64 DIGESTS">
+for details.
 
 =item B<squeeze>
 
-Returns the next 512 bytes of the SHA3-0 digest encoded as a binary
-string.  The I<squeeze> method may be called repeatedly to construct
-digests of any desired length.
+Returns the next 168 (136) bytes of the SHAKE128 (SHAKE256) digest
+encoded as a binary string.  The I<squeeze> method may be called
+repeatedly to construct digests of any desired length.
 
-This method is B<applicable only to SHA3-0 objects>.
+This method is B<applicable only to SHAKE128 and SHAKE256 objects>.
 
 =back
 
 =head1 SEE ALSO
 
 L<Digest>, L<Digest::SHA>, L<Digest::Keccak>
+
+The Draft FIPS 202 SHA-3 Standard can be found at:
+
+L<http://csrc.nist.gov/publications/drafts/fips-202/fips_202_draft.pdf>
 
 The Keccak/SHA-3 specifications can be found at:
 
@@ -553,7 +576,7 @@ and lasting happiness."
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2012-2014 Mark Shelor
+Copyright (C) 2012-2015 Mark Shelor
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

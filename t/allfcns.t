@@ -1,6 +1,7 @@
 use strict;
 use Digest::SHA3 qw(
-	sha3_0		sha3_0_base64		sha3_0_hex
+	shake128	shake128_base64		shake128_hex
+	shake256	shake256_base64		shake256_hex
 	sha3_224	sha3_224_base64		sha3_224_hex
 	sha3_256	sha3_256_base64		sha3_256_hex
 	sha3_384	sha3_384_base64		sha3_384_hex

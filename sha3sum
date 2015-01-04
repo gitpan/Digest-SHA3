@@ -2,10 +2,10 @@
 
 	## sha3sum: filter for computing SHA-3 digests (ref. shasum)
 	##
-	## Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
+	## Copyright (C) 2012-2015 Mark Shelor, All Rights Reserved
 	##
-	## Version: 0.22
-	## Sun Jun  1 00:15:46 MST 2014
+	## Version: 0.23
+	## Sun Jan  4 05:36:30 MST 2015
 
 	## sha3sum SYNOPSIS adapted from GNU Coreutils sha1sum. Add
 	## "-a" option for algorithm selection,
@@ -30,7 +30,7 @@ sha3sum - Print or Check SHA-3 Checksums
  Print or check SHA-3 checksums.
  With no FILE, or when FILE is -, read standard input.
 
-   -a, --algorithm   224 (default), 256, 384, 512, 0
+   -a, --algorithm   224 (default), 256, 384, 512, 128000, 256000
    -b, --binary      read in binary mode
    -c, --check       read SHA-3 sums from the FILEs and check them
    -t, --text        read in text mode (default)
@@ -49,7 +49,7 @@ sha3sum - Print or Check SHA-3 Checksums
    -h, --help        display this help and exit
    -v, --version     output version information and exit
 
- The sums are computed as described in the Keccak SHA-3 submission.
+ The sums are computed as described in the FIPS 202 SHA-3 submission.
  When checking, the input should be a former output of this program.
  The default mode is to print a line with checksum, a character
  indicating type (`*' for binary, ` ' for text, `U' for UNIVERSAL,
@@ -82,7 +82,7 @@ computes the SHA3-384 digest of the 7-bit message I<0001100>:
 
 =head1 AUTHOR
 
-Copyright (c) 2012-2014 Mark Shelor <mshelor@cpan.org>.
+Copyright (c) 2012-2015 Mark Shelor <mshelor@cpan.org>.
 
 =head1 SEE ALSO
 
@@ -92,7 +92,7 @@ I<sha3sum> is implemented using the Perl module L<Digest::SHA3>.
 
 END_OF_POD
 
-my $VERSION = "0.22";
+my $VERSION = "0.23";
 
 
 	## Try to use Digest::SHA3.  If not installed, use the slower
@@ -165,7 +165,7 @@ usage(1, "sha3sum: --status option used only when verifying checksums\n")
 	## Default to SHA3-224 unless overridden by command line option
 
 $alg = 224 unless defined $alg;
-grep { $_ == $alg } (0, 224, 256, 384, 512)
+grep { $_ == $alg } (224, 256, 384, 512, 128000, 256000)
 	or usage(1, "sha3sum: Unrecognized algorithm\n");
 
 
@@ -209,7 +209,8 @@ sub sumfile {
 
 	## %len2alg: maps hex digest length to SHA-3 algorithm
 
-my %len2alg = (1024 => 0, 56 => 224, 64 => 256, 96 => 384, 128 => 512);
+my %len2alg = (56 => 224, 64 => 256, 96 => 384, 128 => 512,
+		336 => 128000, 272 => 256000);
 
 
 	## unescape: convert backslashed filename to plain filename

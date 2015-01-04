@@ -3,10 +3,10 @@
  *
  * Ref: http://keccak.noekeon.org/specs_summary.html
  *
- * Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
+ * Copyright (C) 2012-2015 Mark Shelor, All Rights Reserved
  *
- * Version: 0.22
- * Sun Jun  1 00:15:46 MST 2014
+ * Version: 0.23
+ * Sun Jan  4 05:36:30 MST 2015
  *
  */
 
@@ -60,26 +60,29 @@
 		(SHA64) m[6] << 48 | (SHA64) m[7] << 56
 #endif
 
-#define SHA3_0		0
 #define SHA3_224	224
 #define SHA3_256	256
 #define SHA3_384	384
 #define SHA3_512	512
+#define SHAKE128	128000
+#define SHAKE256	256000
 
-#define SHA3_0_BLOCK_BITS	1024
 #define SHA3_224_BLOCK_BITS	1152
 #define SHA3_256_BLOCK_BITS	1088
 #define SHA3_384_BLOCK_BITS	832
 #define SHA3_512_BLOCK_BITS	576
+#define SHAKE128_BLOCK_BITS	1344
+#define SHAKE256_BLOCK_BITS	1088
 
-#define SHA3_0_DIGEST_BITS	4096
 #define SHA3_224_DIGEST_BITS	224
 #define SHA3_256_DIGEST_BITS	256
 #define SHA3_384_DIGEST_BITS	384
 #define SHA3_512_DIGEST_BITS	512
+#define SHAKE128_DIGEST_BITS	SHAKE128_BLOCK_BITS
+#define SHAKE256_DIGEST_BITS	SHAKE256_BLOCK_BITS
 
-#define SHA3_MAX_BLOCK_BITS	SHA3_224_BLOCK_BITS
-#define SHA3_MAX_DIGEST_BITS	SHA3_0_DIGEST_BITS
+#define SHA3_MAX_BLOCK_BITS	SHAKE128_BLOCK_BITS
+#define SHA3_MAX_DIGEST_BITS	SHAKE128_DIGEST_BITS
 #define SHA3_MAX_HEX_LEN	(SHA3_MAX_DIGEST_BITS / 4)
 #define SHA3_MAX_BASE64_LEN	(1 + (SHA3_MAX_DIGEST_BITS / 6))
 
@@ -94,6 +97,7 @@ typedef struct SHA3 {
 	char hex[SHA3_MAX_HEX_LEN+1];
 	char base64[SHA3_MAX_BASE64_LEN+1];
 	int padded;
+	int shake;
 } SHA3;
 
 #endif	/* _INCLUDE_SHA3_H_ */

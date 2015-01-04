@@ -29,7 +29,8 @@
 #include "src/sha3.c"
 
 static int ix2alg[] =
-	{0,0,0,224,224,224,256,256,256,384,384,384,512,512,512};
+	{224,224,224,256,256,256,384,384,384,512,512,512,
+	 128000,128000,128000,256000,256000,256000};
 
 #ifndef INT2PTR
 #define INT2PTR(p, i) (p) (i)
@@ -106,23 +107,26 @@ CODE:
 	Safefree(s);
 
 SV *
-sha3_0(...)
+sha3_224(...)
 ALIAS:
-	Digest::SHA3::sha3_0 = 0
-	Digest::SHA3::sha3_0_hex = 1
-	Digest::SHA3::sha3_0_base64 = 2
-	Digest::SHA3::sha3_224 = 3
-	Digest::SHA3::sha3_224_hex = 4
-	Digest::SHA3::sha3_224_base64 = 5
-	Digest::SHA3::sha3_256 = 6
-	Digest::SHA3::sha3_256_hex = 7
-	Digest::SHA3::sha3_256_base64 = 8
-	Digest::SHA3::sha3_384 = 9
-	Digest::SHA3::sha3_384_hex = 10
-	Digest::SHA3::sha3_384_base64 = 11
-	Digest::SHA3::sha3_512 = 12
-	Digest::SHA3::sha3_512_hex = 13
-	Digest::SHA3::sha3_512_base64 = 14
+	Digest::SHA3::sha3_224 = 0
+	Digest::SHA3::sha3_224_hex = 1
+	Digest::SHA3::sha3_224_base64 = 2
+	Digest::SHA3::sha3_256 = 3
+	Digest::SHA3::sha3_256_hex = 4
+	Digest::SHA3::sha3_256_base64 = 5
+	Digest::SHA3::sha3_384 = 6
+	Digest::SHA3::sha3_384_hex = 7
+	Digest::SHA3::sha3_384_base64 = 8
+	Digest::SHA3::sha3_512 = 9
+	Digest::SHA3::sha3_512_hex = 10
+	Digest::SHA3::sha3_512_base64 = 11
+	Digest::SHA3::shake128 = 12
+	Digest::SHA3::shake128_hex = 13
+	Digest::SHA3::shake128_base64 = 14
+	Digest::SHA3::shake256 = 15
+	Digest::SHA3::shake256_hex = 16
+	Digest::SHA3::shake256_base64 = 17
 PREINIT:
 	int i;
 	UCHR *data;

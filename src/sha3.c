@@ -3,10 +3,10 @@
  *
  * Ref: http://keccak.noekeon.org/specs_summary.html
  *
- * Copyright (C) 2012-2014 Mark Shelor, All Rights Reserved
+ * Copyright (C) 2012-2015 Mark Shelor, All Rights Reserved
  *
- * Version: 0.22
- * Sun Jun  1 00:15:46 MST 2014
+ * Version: 0.23
+ * Sun Jan  4 05:36:30 MST 2015
  *
  */
 
@@ -190,29 +190,32 @@ static UCHR *digcpy(SHA3 *s)
 #define B64LEN(nbytes)	(((nbytes) % 3 == 0) ? ((nbytes) / 3) * 4 \
 			: ((nbytes) / 3) * 4 + ((nbytes) % 3) + 1)
 
-#define SHA3_INIT(s, algo)						\
-	do {								\
-		Zero(s, 1, SHA3);					\
-		s->alg = algo;						\
-		s->blocksize = SHA3_ ## algo ## _BLOCK_BITS;		\
-		s->digestlen = SHA3_ ## algo ## _DIGEST_BITS >> 3;	\
+#define SHA3_INIT(s, algo, xof)					\
+	do {							\
+		Zero(s, 1, SHA3);				\
+		s->alg = algo;					\
+		s->shake = xof;					\
+		s->blocksize = algo ## _BLOCK_BITS;		\
+		s->digestlen = algo ## _DIGEST_BITS >> 3;	\
 	} while (0)
 
 /* sharewind: resets digest object */
 static void sharewind(SHA3 *s)
 {
-	if      (s->alg == SHA3_0)   SHA3_INIT(s, 0);
-	else if (s->alg == SHA3_224) SHA3_INIT(s, 224);
-	else if (s->alg == SHA3_256) SHA3_INIT(s, 256);
-	else if (s->alg == SHA3_384) SHA3_INIT(s, 384);
-	else if (s->alg == SHA3_512) SHA3_INIT(s, 512);
+	if      (s->alg == SHA3_224) SHA3_INIT(s, SHA3_224, 0);
+	else if (s->alg == SHA3_256) SHA3_INIT(s, SHA3_256, 0);
+	else if (s->alg == SHA3_384) SHA3_INIT(s, SHA3_384, 0);
+	else if (s->alg == SHA3_512) SHA3_INIT(s, SHA3_512, 0);
+	else if (s->alg == SHAKE128) SHA3_INIT(s, SHAKE128, 1);
+	else if (s->alg == SHAKE256) SHA3_INIT(s, SHAKE256, 1);
 }
 
 /* shainit: initializes digest object */
 static int shainit(SHA3 *s, int alg)
 {
-	if (alg != SHA3_0 && alg != SHA3_224 && alg != SHA3_256 &&
-		alg != SHA3_384 && alg != SHA3_512)
+	if (alg != SHA3_224 && alg != SHA3_256 &&
+		alg != SHA3_384 && alg != SHA3_512 &&
+		alg != SHAKE128 && alg != SHAKE256)
 		return 0;
 	s->alg = alg;
 	sharewind(s);
@@ -308,45 +311,45 @@ static ULNG shawrite(UCHR *bitstr, ULNG bitcnt, SHA3 *s)
 		return(shabits(bitstr, bitcnt, s));
 }
 
+#define SETBIT(s, pos)  s[(pos) >> 3] |= (UCHR)  (0x01 << ((pos) % 8))
+#define CLRBIT(s, pos)  s[(pos) >> 3] &= (UCHR) ~(0x01 << ((pos) % 8))
+
 /* shafinish: pads remaining block(s) and computes final digest state */
 static void shafinish(SHA3 *s)
 {
-	UCHR b;		/* partial byte */
+	UCHR domain = s->shake ? 0x1f : 0x06;
 
 	if (s->padded)
 		return;
 	s->padded = 1;
 	if (s->blockcnt % 8 == 0) {
-		s->block[s->blockcnt/8] = 0x01, s->blockcnt += 8;
+		s->block[s->blockcnt/8] = domain;
+		s->blockcnt += 8;
 		while (s->blockcnt < s->blocksize)
 			s->block[s->blockcnt/8] = 0x00, s->blockcnt += 8;
 		s->block[(s->blockcnt/8)-1] |= 0x80;
 		sha3(s, s->block);
 		return;
 	}
-	b = 0x80 | (s->block[NBYTES(s->blockcnt)-1] >> 1);
-	s->blockcnt++;
-	if (s->blockcnt % 8 == 0) {
-		s->block[(s->blockcnt/8)-1] = b;
+	s->block[NBYTES(s->blockcnt)-1] >>= (8 - (s->blockcnt % 8));
+	for (; domain; domain >>= 1) {
+		if (domain & 0x01)
+			SETBIT(s->block, s->blockcnt), s->blockcnt++;
+		else
+			CLRBIT(s->block, s->blockcnt), s->blockcnt++;
 		if (s->blockcnt == s->blocksize)
 			sha3(s, s->block), s->blockcnt = 0;
-		s->block[s->blockcnt/8] = 0x00, s->blockcnt += 8;
 	}
-	else {
-		while (s->blockcnt % 8)
-			b >>= 1, s->blockcnt++;
-		s->block[(s->blockcnt/8)-1] = b;
-	}
-	while (s->blockcnt % s->blocksize)
-		s->block[s->blockcnt/8] = 0x00, s->blockcnt += 8;
-	s->block[(s->blockcnt/8)-1] |= 0x80;
+	while (s->blockcnt < (s->blocksize - 1))
+		CLRBIT(s->block, s->blockcnt), s->blockcnt++;
+	SETBIT(s->block, s->blockcnt), s->blockcnt++;
 	sha3(s, s->block);
 }
 
 /* shasqueeze: returns pointer to squeezed digest (binary) */
 static UCHR *shasqueeze(SHA3 *s)
 {
-	if (s->alg != SHA3_0)
+	if (s->alg != SHAKE128 && s->alg != SHAKE256)
 		return(NULL);
 	digcpy(s);
 	keccak_f(s->S);

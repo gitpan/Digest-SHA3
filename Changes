@@ -1,5 +1,11 @@
 Revision history for Perl extension Digest::SHA3.
 
+0.23  Sun Jan  4 05:36:30 MST 2015
+	- updated to reflect Draft FIPS 202
+		-- append domain separation bits to message
+		-- implement SHAKE128 and SHAKE256 Extendable-Output
+			Functions (XOFs)
+
 0.22  Sun Jun  1 00:15:46 MST 2014
 	- fixed reserved-word clash when compiling with C++
 		-- use 'classname' instead of 'class'
